@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>not so.dev</title>
+<meta name="description" content="not so.dev — in development.">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:      #0b0c0e;   /* background, cool near-black */
+    --lift:     #14171c;   /* faint center lift          */
+    --bone:     #ede8df;   /* so.dev — warm, stable, present */
+    --phosphor: #79e2d2;   /* the "not" and the "!" — cold correction */
+    --mute:     #565a61;   /* utility text               */
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html,body{ height:100%; }
+
+  body{
+    min-height:100dvh;
+    background:
+      radial-gradient(120% 90% at 50% 42%, var(--lift) 0%, var(--ink) 62%);
+    color:var(--bone);
+    font-family:"Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    display:grid;
+    grid-template-rows:1fr auto;
+    place-items:center;
+    padding:clamp(1.25rem, 4vw, 2.5rem);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow:hidden;
+  }
+
+  /* ---- stage ------------------------------------------------------ */
+  .stage{
+    grid-row:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:clamp(1.1rem, 3.2vw, 1.9rem);
+    text-align:center;
+    opacity:0;
+    animation:rise 900ms 120ms ease-out forwards;
+  }
+
+  .wordmark{
+    font-weight:700;
+    font-size:clamp(2.6rem, 12vw, 7rem);
+    line-height:1;
+    letter-spacing:-0.02em;
+    white-space:nowrap;
+  }
+
+  /* reserve the "not" slot so nothing reflows when it ghosts out */
+  .not{
+    display:inline-block;
+    color:var(--phosphor);
+    opacity:0;
+    animation:breathe 5.6s 1150ms ease-in-out infinite;
+  }
+  .so{ color:var(--bone); }
+  .bang{
+    color:var(--phosphor);
+    opacity:0;
+    animation:strike 700ms 620ms ease-out forwards;
+  }
+
+  .meta{
+    font-size:clamp(0.72rem, 2vw, 0.86rem);
+    letter-spacing:0.06em;
+    color:var(--mute);
+    opacity:0;
+    animation:rise 900ms 1500ms ease-out forwards;
+  }
+  .meta .cursor{
+    display:inline-block;
+    width:0.6ch;
+    color:var(--phosphor);
+    animation:blink 1.15s steps(1) 1600ms infinite;
+  }
+
+  /* ---- footer ----------------------------------------------------- */
+  .tagline{
+    grid-row:2;
+    font-size:clamp(0.68rem, 1.8vw, 0.8rem);
+    letter-spacing:0.04em;
+    color:var(--mute);
+    opacity:0;
+    animation:rise 900ms 1800ms ease-out forwards;
+    padding-bottom:clamp(0.5rem, 2vw, 1rem);
+  }
+
+  /* ---- motion ----------------------------------------------------- */
+  @keyframes breathe{
+    0%,100%{ opacity:0.05; filter:blur(0.45px); text-shadow:none; }
+    50%    { opacity:0.92; filter:blur(0);
+             text-shadow:0 0 20px rgba(121,226,210,0.32); }
+  }
+  @keyframes strike{
+    from{ opacity:0; transform:translateY(0.06em); }
+    to  { opacity:1; transform:translateY(0); }
+  }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(0.4rem); }
+    to  { opacity:1; transform:translateY(0); }
+  }
+  @keyframes blink{ 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
+
+  @media (prefers-reduced-motion: reduce){
+    .stage,.meta,.tagline,.bang{ opacity:1; animation:none; transform:none; }
+    .not{ opacity:0.9; animation:none; filter:none;
+          text-shadow:0 0 18px rgba(121,226,210,0.28); }
+    .meta .cursor{ animation:none; }
+  }
+</style>
+</head>
+<body>
+  <main class="stage">
+    <h1 class="wordmark" aria-label="not so.dev">
+      <span class="not">not&nbsp;</span><span class="so">so.dev</span><span class="bang">&nbsp;!</span>
+    </h1>
+    <p class="meta">// in development<span class="cursor">_</span></p>
+  </main>
+  <footer class="tagline">life is vibecoding, every day.</footer>
+</body>
+</html>
