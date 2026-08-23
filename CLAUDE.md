@@ -1,76 +1,78 @@
 # CLAUDE.md — The Unacceptable Universe
 
-> **Repo:** `notso.dev` &nbsp;·&nbsp; _(flip this line to `unacceptable.dev` in the other repo — everything else here is shared)_
+> **Repo:** `notso.dev` — flip this line to `unacceptable.dev` in the other repo. Everything else is shared.
 
-Shared source of truth for the concept. Two **separate** repos on purpose (data siloing) — this file keeps the idea coherent; the code stays isolated per repo.
-
----
+Shared source of truth. Two **separate** repos on purpose (data siloing). This file keeps the idea coherent; code stays isolated per repo. The only bridge between the two sites is a URL redirect and the owner's hands — **no shared backend.**
 
 ## What this is
+A two-domain satirical portal for **vibe coders**. Dev-culture humour, dry sarcasm, minimal aesthetic. A mechanism, not a spectacle.
 
-A two-domain satirical portal for **vibe coders**. Dev-culture humour, dry irony, minimal aesthetic. Not a spectacle — a mechanism.
-
-The whole brand is one symmetric visual joke, no documentation needed:
-
+One symmetric visual joke, no docs needed:
 ```
-so.dev   →   not so.dev
-acceptable   →   unacceptable
+so.dev → not so.dev      acceptable → unacceptable
 ```
+Read in 3 seconds or it failed.
 
-The reader gets it in 3 seconds or it failed.
+## Tone spine (non-negotiable)
+**Mock the machine, protect the human.** Sarcasm targets tools, buzzwords, cloud providers, industry hype — never the user. Teasing, never condescending or judgmental. Cynical on the outside, kind underneath. That warmth is the differentiator; do not trade it for a cheap put-down.
 
 ## The two domains = one loop
+| Domain | Role |
+|---|---|
+| **unacceptable.dev** | INPUT — the confession terminal |
+| **notso.dev** | OUTPUT — the feed + the Uncle Dev bot |
 
-| Domain | Role | What happens |
-|---|---|---|
-| **unacceptable.dev** | INPUT — the confession terminal | you write your `NOT SO ___` story / bug / confession |
-| **notso.dev** | OUTPUT — the feed | approved stories live here, endless scroll |
+Confession box (unacceptable.dev) has **two CTAs**:
+- **Send to void** — zero record anywhere. Catharsis is the product; no retention needed.
+- **Send to blog** — becomes a feed entry on notso.dev. Asks for a handle (Discord / socials / whatever they already use), not an account. Display-only, unverified. **Owner reviews every submission before it publishes.**
 
-Atomic unit of content: a **`NOT SO [X]`** tag (NOT SO SENIOR, NOT SO SOBER, NOT SO PROMPT ENGINEER…) + free-text body. The tag is the meme; the body is the story.
+Feed content unit: a `NOT SO [X]` tag + the story. Owner assigns/curates the tag at moderation time.
 
-- **No accounts, no sign-up.** Optional handle + link to their work.
-- **Nothing auto-publishes.** Submission → queue → owner reviews (admin/email) → approve → live.
-- **No AI content-scanner in v1.** Volume is small; the owner reads them over coffee. Add a pre-filter only if volume ever justifies it — not before.
+## notso.dev — the Uncle Dev bot
+The core product. The askXXX model with a soul: **no app, no sign-up, just ask.**
+- Single terminal box: `guest@notso:~$ ask_uncle [question]`.
+- Persona + full behaviour spec lives in **`uncle-dev.system.md`** (notso.dev repo only). English-first, Greek if the user writes Greek. 2-3 sentences, one real-life metaphor, one `//` decompression punchline. Stays strictly in the dev lane.
+- Backend: **Mistral API**, called from a **Cloudflare Worker**. API key is a Worker **secret** (`wrangler secret`) — never in code, never client-side.
+- Abuse/cost control on the no-sign-up box: **Turnstile** (bot filter) **+ per-IP rate limiting**. Both, always. "Just ask" is open UX and an open cost door at the same time.
+- Stateless: each answer stands alone, no memory. Cheaper and fits no-sign-up.
 
-## Aesthetic direction
+## Funnels (notso -> unacceptable)
+Panic gags redirect to the confession box **in Uncle Dev's warm voice** — the uncle walks you there, the system doesn't mock you.
+- **Cmd+Z / Ctrl+Z ambient listener** is the ONE funnel to ship first: it catches the reflex, the user doesn't opt in. ~30 lines of JS.
+- Rollback / Nuke&Pave bait buttons = the same one-note payload with a button. Ship at most one, later, or cut. Don't build three funnels for one joke.
+- The redirect carries only a **canned** pre-fill via URL. The user's typed confession goes as a **POST body — never** a URL param.
 
-- Minimal, brutalist-adjacent, monospace. `Space Mono` display.
-- Palette: cool near-black ink `#0b0c0e`, warm bone `#ede8df` for the stable text, Claude orange `#d97757` for the *correction* (the `not`).
-- Signature motion = the **breathing `not`**: `so.dev` sits solid, `not` ghosts in and out in front of it, slow, cinematic, forever. Space is reserved so nothing reflows.
-- One-time entrance beat: `so.dev` settles first, then `not` starts breathing. Skippable / respects `prefers-reduced-motion`.
-- Hard rule: **one motion carries the page.** No VHS, no glitch storm, no animated iceberg. If a second effect competes with the breathing `not`, cut it.
+## Accessibility (hard rule)
+Honour the real OS `prefers-reduced-motion` silently and correctly, everywhere. A user who set it sees a calm site from the first frame — no CRT flicker, no assault. The in-page "Reduce Motion" trap toggle is a separate cosmetic gag and must **never** override a real accessibility preference. The joke never sits on top of a real need.
 
 ## Stack & constraints
-
-- Static-first. **Cloudflare Pages** hosting. Plain `index.html`, no framework unless a real need forces it.
-- Local-first. Avoid third-party extensions and heavy dependencies. Worker-based flows if backend is ever needed.
-- Optimise for a **MacBook Air 2017** — keep builds light, avoid lag-heavy tooling.
-- Google Workspace / Maps API only where a project actually calls for it (not here).
+- Static-first, **Cloudflare Pages**, Git-connected (push -> auto-deploy). Custom domain via Pages.
+- The bot adds one Worker to notso.dev. **That is the only dynamic piece. Keep the feed static (git-based moderation). Do NOT add KV / D1 / a database just because a Worker now exists.**
+- Local-first, avoid third-party bloat, worker-based flows. Optimise for a **MacBook Air 2017** — light tooling, no lag.
 
 ## Anti-goals (protect against overengineering)
-
-- Don't build both sites at once. **`notso.dev` landing ships first.** Prove the loop, then wire the satellite.
-- No AI moderation, no auth system, no CMS in v1.
-- No mascot on-site until the Dave Notso sketch is finalised.
-- No feature that needs a manual to understand the joke.
+- notso.dev landing shipped first; bot next, feed after. Don't build everything at once.
+- No AI content-scanner, no auth, no CMS in v1. Owner moderates by hand at fun-project volume.
+- No mascot on-site until the Dave Notso sketch is final.
+- No feature that needs a manual to get the joke.
 
 ## Workflow
-
-`Brainstorm → Architecture → Strategy → Preview → Commit & Push.`
-
-Review output categorised as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
+`Brainstorm -> Architecture -> Strategy -> Preview -> Commit & Push.`
+Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
 
 ---
 
 ## Current status
 
 ### notso.dev — this repo
-- [x] Placeholder landing (`index.html`): breathing `not` hero, `// in development`, tagline.
-- [ ] Deploy to Cloudflare Pages + point custom domain.
-- [ ] Feed / endless scroll (later).
-- [ ] Reactive Dave Notso mascot (later, pending sketch).
+- [x] Placeholder landing (`index.html`): breathing `not` hero.
+- [x] `uncle-dev.system.md` — Uncle Dev persona / behaviour spec.
+- [ ] Terminal-nav (`DIR /ABOUT` -> SYSTEM_SPECS.LOG etc.) + punchline bank. Static, buildable now.
+- [ ] Uncle Dev Worker (Mistral + Turnstile + rate limit). **Blocked: waiting on Mistral API key.**
+- [ ] Cmd+Z ambient funnel -> unacceptable.dev.
+- [ ] Feed (static, git-based).
 
 ### unacceptable.dev — other repo
-- [ ] Confession terminal (input box, `EXECUTE / DEPLOY TO VOID`).
-- [ ] Submission → moderation queue → email/admin → publish to notso.dev feed.
-- Not started. notso landing goes live first.
+- [ ] Confession terminal: input box, two CTAs (void / blog-with-handle).
+- [ ] Submission -> email to owner -> approve -> paste into notso repo -> push -> live.
+- Not started. Bot comes first. (Do NOT copy `uncle-dev.system.md` here — the bot lives in notso.dev only.)
