@@ -15,7 +15,7 @@
     --ink:      #0b0c0e;   /* background, cool near-black */
     --lift:     #14171c;   /* faint center lift          */
     --bone:     #ede8df;   /* so.dev — warm, stable, present */
-    --phosphor: #79e2d2;   /* the "not" and the "!" — cold correction */
+    --phosphor: #d97757;   /* the "not" — Claude orange correction */
     --mute:     #565a61;   /* utility text               */
   }
 
@@ -66,11 +66,6 @@
     animation:breathe 5.6s 1150ms ease-in-out infinite;
   }
   .so{ color:var(--bone); }
-  .bang{
-    color:var(--phosphor);
-    opacity:0;
-    animation:strike 700ms 620ms ease-out forwards;
-  }
 
   .meta{
     font-size:clamp(0.72rem, 2vw, 0.86rem);
@@ -101,11 +96,7 @@
   @keyframes breathe{
     0%,100%{ opacity:0.05; filter:blur(0.45px); text-shadow:none; }
     50%    { opacity:0.92; filter:blur(0);
-             text-shadow:0 0 20px rgba(121,226,210,0.32); }
-  }
-  @keyframes strike{
-    from{ opacity:0; transform:translateY(0.06em); }
-    to  { opacity:1; transform:translateY(0); }
+             text-shadow:0 0 20px rgba(217,119,87,0.32); }
   }
   @keyframes rise{
     from{ opacity:0; transform:translateY(0.4rem); }
@@ -114,9 +105,9 @@
   @keyframes blink{ 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
 
   @media (prefers-reduced-motion: reduce){
-    .stage,.meta,.tagline,.bang{ opacity:1; animation:none; transform:none; }
+    .stage,.meta,.tagline{ opacity:1; animation:none; transform:none; }
     .not{ opacity:0.9; animation:none; filter:none;
-          text-shadow:0 0 18px rgba(121,226,210,0.28); }
+          text-shadow:0 0 18px rgba(217,119,87,0.28); }
     .meta .cursor{ animation:none; }
   }
 </style>
@@ -124,7 +115,7 @@
 <body>
   <main class="stage">
     <h1 class="wordmark" aria-label="not so.dev">
-      <span class="not">not&nbsp;</span><span class="so">so.dev</span><span class="bang">&nbsp;!</span>
+      <span class="not">not&nbsp;</span><span class="so">so.dev</span>
     </h1>
     <p class="meta">// in development<span class="cursor">_</span></p>
   </main>

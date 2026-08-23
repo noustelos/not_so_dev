@@ -35,9 +35,9 @@ Atomic unit of content: a **`NOT SO [X]`** tag (NOT SO SENIOR, NOT SO SOBER, NOT
 ## Aesthetic direction
 
 - Minimal, brutalist-adjacent, monospace. `Space Mono` display.
-- Palette: cool near-black ink `#0b0c0e`, warm bone `#ede8df` for the stable text, cold phosphor `#79e2d2` for the *correction* (the `not`, the `!`).
-- Signature motion = the **breathing `not`**: `so.dev !` sits solid, `not` ghosts in and out in front of it, slow, cinematic, forever. Space is reserved so nothing reflows.
-- One-time entrance beat: `so.dev !` settles first, then `not` starts breathing. Skippable / respects `prefers-reduced-motion`.
+- Palette: cool near-black ink `#0b0c0e`, warm bone `#ede8df` for the stable text, Claude orange `#d97757` for the *correction* (the `not`).
+- Signature motion = the **breathing `not`**: `so.dev` sits solid, `not` ghosts in and out in front of it, slow, cinematic, forever. Space is reserved so nothing reflows.
+- One-time entrance beat: `so.dev` settles first, then `not` starts breathing. Skippable / respects `prefers-reduced-motion`.
 - Hard rule: **one motion carries the page.** No VHS, no glitch storm, no animated iceberg. If a second effect competes with the breathing `not`, cut it.
 
 ## Stack & constraints
