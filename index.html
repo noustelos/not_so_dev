@@ -428,6 +428,30 @@
       "token:", token ? "yes" : "no");
   }, ms));
 
+  /* Safety net for the ordering problem above: if implicit rendering still
+     found nothing, render it ourselves. Safe to call now that gateNote no
+     longer empties the container. Checks the METHOD, never just the object. */
+  setTimeout(() => {
+    if (widgetUp() || token) return;
+    if (!window.turnstile || typeof window.turnstile.render !== "function"){
+      console.error("fallback: render unavailable, typeof =",
+        window.turnstile ? typeof window.turnstile.render : "no turnstile");
+      return;
+    }
+    try {
+      const slot = document.getElementById("turnstile");
+      slot.classList.remove("cf-turnstile");
+      const id = window.turnstile.render("#turnstile", {
+        sitekey: slot.dataset.sitekey,
+        theme: "dark",
+        callback: window.onSuccess,
+        "error-callback": window.onError,
+        "expired-callback": window.onExpired,
+      });
+      console.log("fallback render ->", id);
+    } catch (err) { console.error("fallback render threw:", err); }
+  }, 4000);
+
   /* An actual rendered widget puts an iframe in the slot. That, not a guess
      about script state, is how we tell "up" from "never arrived". */
   setTimeout(() => {
@@ -439,6 +463,10 @@
   }, 10000);
 
 </script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<!-- defer, NOT async: async executes the moment it downloads, which on this
+     page happens before the parser reaches #turnstile (it sits behind a large
+     inline stylesheet). Turnstile scans for .cf-turnstile once on execution,
+     finds nothing, and never renders. defer guarantees a parsed DOM. -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
 </body>
 </html>
