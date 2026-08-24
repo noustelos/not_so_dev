@@ -198,14 +198,79 @@
   .out .err{ color:var(--phosphor); }
 
   /* ---- footer ----------------------------------------------------- */
-  .tagline{
+  /* Three ranks, quietest last: the joke, then contact, then the credit.
+     The fade lives on the <footer>, so the two rows arrive together. */
+  .site-foot{
     grid-row:2;
-    font-size:clamp(0.68rem, 1.8vw, 0.8rem);
-    letter-spacing:0.04em;
-    color:var(--mute);
+    width:100%;
+    max-width:44rem;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:0.55rem;
+    text-align:center;
     opacity:0;
     animation:rise 900ms 1800ms ease-out forwards;
     padding-bottom:clamp(0.5rem, 2vw, 1rem);
+  }
+
+  .foot-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:center;
+    gap:0.6rem 1.25rem;
+    flex-wrap:wrap;
+  }
+
+  .tagline{
+    font-size:clamp(0.68rem, 1.8vw, 0.8rem);
+    letter-spacing:0.04em;
+    color:var(--mute);
+  }
+
+  /* mailto: hands off to a mail client — it is not an external page, so no
+     target/rel here. Shown in full rather than behind a "Contact" label: a
+     visible address can still be copied when the browser has no mail handler. */
+  .mailto{
+    font-size:clamp(0.68rem, 1.8vw, 0.8rem);
+    letter-spacing:0.04em;
+    color:var(--mute);
+    text-decoration:none;
+    border-bottom:1px solid transparent;
+    transition:color 160ms ease, border-color 160ms ease;
+  }
+  .mailto:hover,
+  .mailto:focus-visible{ color:var(--phosphor); border-bottom-color:var(--phosphor); }
+
+  /* ---- studio credit ----
+     Copied by hand from askCARNIVORES, never imported: the projects share no
+     code. Re-tokenised for this palette — the original's opacity trick would
+     sink below AA against --ink, so the quiet state is done with colour. */
+  .by{
+    display:inline-block;
+    padding:0.35rem 0.25rem;
+    color:var(--rule);
+    font-size:clamp(0.6rem, 1.5vw, 0.68rem);
+    font-weight:700;
+    letter-spacing:0.09em;
+    line-height:1;
+    text-decoration:none;
+    white-space:nowrap;
+    transition:color 250ms ease;
+  }
+  .by:hover,
+  .by:focus-visible{ color:var(--mute); }
+  .by__name{ color:var(--mute); }
+  .by:hover .by__name,
+  .by:focus-visible .by__name{ color:var(--bone); }
+
+  /* the studio's mark, not punctuation */
+  .by__mark{
+    display:inline-block;
+    margin-left:0.18em;
+    font-size:0.74em;
+    letter-spacing:0.03em;
+    transform:translateY(-0.32em);
   }
 
   /* ---- motion ----------------------------------------------------- */
@@ -221,7 +286,8 @@
   @keyframes blink{ 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
 
   @media (prefers-reduced-motion: reduce){
-    .stage,.hero,.meta,.tagline,.terminal{ opacity:1; animation:none; transform:none; }
+    .stage,.hero,.meta,.site-foot,.terminal{ opacity:1; animation:none; transform:none; }
+    .mailto,.by{ transition:none; }
     .not{ opacity:0.9; animation:none; filter:none;
           text-shadow:0 0 18px rgba(217,119,87,0.28); }
     .meta .cursor{ animation:none; }
@@ -261,7 +327,17 @@
     </section>
   </main>
 
-  <footer class="tagline">life is vibecoding, every day.</footer>
+  <footer class="site-foot">
+    <div class="foot-row">
+      <!--email_off--><a class="mailto" href="mailto:oops@notso.dev">oops@notso.dev</a><!--/email_off-->
+      <span class="tagline">life is vibecoding, every day.</span>
+    </div>
+
+    <!-- rel is "noopener" only, deliberately: noreferrer would hide that the
+         traffic came from here, and attribution is the whole point. The "/>"
+         is decorative, so it stays out of the accessible name. -->
+    <a class="by" href="https://noustelos.gr/" target="_blank" rel="noopener">A <span class="by__name">NOUSTELOS_STUDIO</span> PROJECT<span class="by__mark" aria-hidden="true">/&gt;</span></a>
+  </footer>
 
 <script>
   /* The public SITE key lives on #ts-widget's data-sitekey — one source of
