@@ -100,6 +100,19 @@ problem, the environment was. **The first preview branch will 500 until
 `MISTRAL_API_KEY` and `TURNSTILE_SECRET_KEY` are added to Preview separately.**
 After adding or rotating any Pages secret, always redeploy before testing.
 
+**Never give an element `id="turnstile"`.** An element id becomes a property of
+`window`, so `<div id="turnstile">` makes `window.turnstile` the div itself.
+Turnstile's `api.js` checks `window.turnstile`, finds it already set, logs
+*"Turnstile already has been loaded. Was Turnstile imported multiple times?"*
+and aborts without rendering. The warning names the wrong cause — there is no
+second import — and every downstream symptom (`render is not a function`,
+`typeof turnstile === "object"`, implicit rendering never scanning) follows
+from the div being mistaken for the API. The container on notso.dev is
+`#ts-widget` for this reason. This cost an entire debugging session.
+
+The lesson generalises: when a page fails and a near-identical test page works,
+**diff the two pages first**. The answer was one attribute the whole time.
+
 **Local dev.** `.dev.vars` is gitignored and untracked — it holds the Turnstile
 *test* keys (sitekey `1x00000000000000000000AA` 24 chars / secret
 `1x0000000000000000000000000000000AA` 35 chars, both always-pass). Those two
