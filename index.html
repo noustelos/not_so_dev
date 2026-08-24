@@ -392,8 +392,13 @@
      typeof check cannot give. Sitekey is read back off the element so it
      still lives in exactly one place. */
   function renderFallback(){
-    if (widgetUp() || !window.turnstile) return;
-    if (typeof window.turnstile.ready !== "function") return;
+    if (widgetUp()) return;
+    if (!window.turnstile){ console.error("turnstile fallback: window.turnstile missing"); return; }
+    if (typeof window.turnstile.ready !== "function"){
+      console.error("turnstile fallback: ready() unavailable, typeof =", typeof window.turnstile.ready);
+      return;
+    }
+    console.log("turnstile fallback: calling ready()");
     window.turnstile.ready(() => {
       const slot = document.getElementById("turnstile");
       if (!slot || widgetUp()) return;
