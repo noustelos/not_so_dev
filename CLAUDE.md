@@ -193,6 +193,17 @@ NOT added to the production sitekey's Hostname Management — a permanent
 loosening of the live key for a temporary preview is a bad trade. Go Live is
 for checking layout only; the bot flow is verified against production.
 
+**`max_tokens` sized against English silently truncates Greek.** Greek
+tokenises at roughly 2-3 tokens per word against English's ~1.3, so a ceiling
+that comfortably fits an English answer cuts a Greek one in half — the reply
+arrived severed mid-word (`...κοίτα ξανά τον κώδικά σου σ`). `MAX_TOKENS` went
+256 -> 512 on 2026-08-24. This is headroom, not licence to ramble: the prompt
+still caps answers at 3 sentences in every language. `ask.js` also reads
+Mistral's `finish_reason` and, on `"length"`, trims back to the last complete
+sentence — a dangling character reads as a broken site. That trim sacrifices
+the `//` punchline when it fires, so it logs a warning: **if that warning shows
+up regularly, tighten the prompt, do not raise the ceiling again.**
+
 **Local dev.** `.dev.vars` is gitignored and untracked — it holds the Turnstile
 *test* keys (sitekey `1x00000000000000000000AA` 24 chars / secret
 `1x0000000000000000000000000000000AA` 35 chars, both always-pass). Those two
@@ -214,7 +225,8 @@ production.
 - ~~Mistral spend cap~~ — **DONE 2026-08-24: EUR 15 cap set on the Mistral
   account.** This is the hard ceiling; Turnstile and the per-IP throttle are
   probabilistic and cannot bound cost on their own. At roughly EUR 0.0002 per
-  question (~1000 input + 256 output tokens on Mistral Small) that is on the
+  question (~1000 input + up to 512 output tokens on Mistral Small — the
+  ceiling was raised from 256 on 2026-08-24, see Gotchas) that is on the
   order of tens of thousands of questions — far above fun-project volume, so it
   caps an abuse scenario without throttling real use. If the bot ever goes
   quiet with no Turnstile error, check whether the cap was reached before
