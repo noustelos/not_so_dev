@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>not so.dev</title>
-<meta name="description" content="not so.dev — in development.">
+<meta name="description" content="not so.dev — ask Uncle Dev. No app, no sign-up, just ask.">
 <link rel="canonical" href="https://notso.dev/">
 <meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,42 +17,47 @@
     --bone:     #ede8df;   /* so.dev — warm, stable, present */
     --phosphor: #ff6b35;   /* the "not" — bright ember correction */
     --mute:     #565a61;   /* utility text               */
+    --rule:     #23262c;   /* hairlines                  */
   }
 
   *{ box-sizing:border-box; margin:0; padding:0; }
 
-  html,body{ height:100%; }
+  html{ height:100%; }
 
   body{
     min-height:100dvh;
     background:
-      radial-gradient(120% 90% at 50% 42%, var(--lift) 0%, var(--ink) 62%);
+      radial-gradient(120% 90% at 50% 34%, var(--lift) 0%, var(--ink) 62%);
+    background-attachment:fixed;
     color:var(--bone);
     font-family:"Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
     display:grid;
     grid-template-rows:1fr auto;
-    place-items:center;
+    justify-items:center;
+    align-items:center;
     padding:clamp(1.25rem, 4vw, 2.5rem);
     -webkit-font-smoothing:antialiased;
     text-rendering:optimizeLegibility;
-    overflow:hidden;
   }
 
   /* ---- stage ------------------------------------------------------ */
   .stage{
     grid-row:1;
+    width:100%;
+    max-width:44rem;
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:clamp(1.1rem, 3.2vw, 1.9rem);
+    gap:clamp(1rem, 3vw, 1.6rem);
     text-align:center;
+    padding-block:clamp(1.5rem, 5vw, 3rem);
     opacity:0;
     animation:rise 900ms 120ms ease-out forwards;
   }
 
   .wordmark{
     font-weight:700;
-    font-size:clamp(2.6rem, 12vw, 7rem);
+    font-size:clamp(2.1rem, 9vw, 4.4rem);
     line-height:1;
     letter-spacing:-0.02em;
     white-space:nowrap;
@@ -81,6 +86,83 @@
     animation:blink 1.15s steps(1) 1600ms infinite;
   }
 
+  /* ---- terminal --------------------------------------------------- */
+  .terminal{
+    width:100%;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    gap:0.9rem;
+    opacity:0;
+    animation:rise 900ms 1700ms ease-out forwards;
+  }
+
+  .ask{
+    display:flex;
+    align-items:baseline;
+    gap:0.6ch;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--rule);
+    padding-bottom:0.6rem;
+  }
+  .ask:focus-within{ border-bottom-color:var(--phosphor); }
+
+  .ps1{
+    color:var(--phosphor);
+    font-size:clamp(0.78rem, 2.1vw, 0.92rem);
+    white-space:nowrap;
+    user-select:none;
+  }
+
+  #q{
+    flex:1 1 12ch;
+    min-width:0;
+    background:transparent;
+    border:0;
+    outline:0;
+    color:var(--bone);
+    font:inherit;
+    font-size:clamp(0.82rem, 2.2vw, 0.95rem);
+    caret-color:var(--phosphor);
+    padding:0.15rem 0;
+  }
+  #q::placeholder{ color:var(--mute); }
+
+  .controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    flex-wrap:wrap;
+  }
+
+  #send{
+    background:transparent;
+    border:1px solid var(--rule);
+    color:var(--bone);
+    font:inherit;
+    font-size:clamp(0.72rem, 1.9vw, 0.82rem);
+    letter-spacing:0.06em;
+    padding:0.5rem 1.1rem;
+    cursor:pointer;
+    transition:border-color 160ms ease, color 160ms ease;
+  }
+  #send:hover:not(:disabled),
+  #send:focus-visible{ border-color:var(--phosphor); color:var(--phosphor); }
+  #send:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .out{
+    display:block;
+    font-size:clamp(0.82rem, 2.2vw, 0.95rem);
+    line-height:1.65;
+    white-space:pre-wrap;
+    min-height:1.65em;
+  }
+  .out .line + .line{ margin-top:0.5rem; }
+  .out .punch{ color:var(--phosphor); }
+  .out .working{ color:var(--mute); }
+  .out .err{ color:var(--phosphor); }
+
   /* ---- footer ----------------------------------------------------- */
   .tagline{
     grid-row:2;
@@ -105,10 +187,11 @@
   @keyframes blink{ 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
 
   @media (prefers-reduced-motion: reduce){
-    .stage,.meta,.tagline{ opacity:1; animation:none; transform:none; }
+    .stage,.meta,.tagline,.terminal{ opacity:1; animation:none; transform:none; }
     .not{ opacity:0.9; animation:none; filter:none;
           text-shadow:0 0 18px rgba(217,119,87,0.28); }
     .meta .cursor{ animation:none; }
+    #send{ transition:none; }
   }
 </style>
 </head>
@@ -117,8 +200,118 @@
     <h1 class="wordmark" aria-label="not so.dev">
       <span class="not">not&nbsp;</span><span class="so">so.dev</span>
     </h1>
-    <p class="meta">// in development<span class="cursor">_</span></p>
+    <p class="meta">// no app, no sign-up, just ask<span class="cursor">_</span></p>
+
+    <section class="terminal">
+      <div class="ask">
+        <label class="ps1" for="q">guest@notso:~$ ask_uncle</label>
+        <input id="q" type="text" maxlength="600" autocomplete="off"
+               autocapitalize="off" spellcheck="false"
+               placeholder="what does npm audit fix --force actually do?">
+      </div>
+
+      <div class="controls">
+        <div id="turnstile"></div>
+        <button id="send" type="button">ask &crarr;</button>
+      </div>
+
+      <output id="out" class="out" for="q" aria-live="polite"></output>
+    </section>
   </main>
+
   <footer class="tagline">life is vibecoding, every day.</footer>
+
+<script>
+  /* Public by design — the Turnstile SITE key is safe in the client.
+     The SECRET key lives only in the Pages environment. */
+  const TURNSTILE_SITE_KEY = "REPLACE_ME";
+
+  const q    = document.getElementById("q");
+  const send = document.getElementById("send");
+  const out  = document.getElementById("out");
+
+  let widgetId = null;
+  let busy = false;
+
+  function print(text, cls){
+    out.textContent = "";
+    const frag = document.createDocumentFragment();
+    for (const raw of String(text).split("\n")){
+      const line = raw.trim();
+      if (!line) continue;
+      const div = document.createElement("div");
+      /* the // decompression punchline gets the ember treatment */
+      div.className = "line " + (cls || (line.startsWith("//") ? "punch" : ""));
+      div.textContent = line;
+      frag.appendChild(div);
+    }
+    out.appendChild(frag);
+  }
+
+  function setBusy(state){
+    busy = state;
+    send.disabled = state;
+    q.disabled = state;
+  }
+
+  async function ask(){
+    if (busy) return;
+
+    const question = q.value.trim();
+    if (!question){
+      print("// You have to actually ask me something, kid.", "err");
+      return;
+    }
+
+    const token = widgetId !== null && window.turnstile
+      ? window.turnstile.getResponse(widgetId)
+      : "";
+
+    if (!token){
+      print("// Hang on — the bouncer's still checking your ID. One sec, kid.", "err");
+      return;
+    }
+
+    setBusy(true);
+    print("uncle dev is sighing...", "working");
+
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ question, turnstileToken: token }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok){
+        print(data.error || "// Something went sideways on my end. Try again, kid.", "err");
+      } else {
+        print(data.answer || "// I've got nothing. Ask me again, kid.");
+      }
+    } catch {
+      print("// Can't reach the old server from here. Check your connection, kid.", "err");
+    } finally {
+      /* Turnstile tokens are single-use — fetch a fresh one for the next question. */
+      if (widgetId !== null && window.turnstile) window.turnstile.reset(widgetId);
+      setBusy(false);
+      q.focus();
+    }
+  }
+
+  send.addEventListener("click", ask);
+  q.addEventListener("keydown", (e) => {
+    if (e.key === "Enter"){ e.preventDefault(); ask(); }
+  });
+
+  window.onTurnstileLoad = function(){
+    widgetId = window.turnstile.render("#turnstile", {
+      sitekey: TURNSTILE_SITE_KEY,
+      theme: "dark",
+      size: "flexible",
+    });
+  };
+</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
 </body>
 </html>

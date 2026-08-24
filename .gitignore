@@ -13,3 +13,9 @@
 *.log
 .env
 .env.*
+
+# cloudflare local dev secrets — NEVER commit
+.dev.vars
+.dev.vars.*
+.wrangler/
+node_modules/
