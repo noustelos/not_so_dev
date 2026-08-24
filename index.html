@@ -264,9 +264,9 @@
   <footer class="tagline">life is vibecoding, every day.</footer>
 
 <script>
-  /* Public by design — the SITE key is safe in the client. The SECRET key
-     exists only in the Pages environment. */
-  const TURNSTILE_SITE_KEY = "0x4AAAAAAEZqcunYx3BQf4uN";
+  /* The public SITE key lives on #ts-widget's data-sitekey — one source of
+     truth, read back from the element where needed. The SECRET key exists
+     only in the Pages environment. */
 
   const q    = document.getElementById("q");
   const send = document.getElementById("send");
