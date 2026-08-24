@@ -265,6 +265,7 @@
   let busy     = false;
   let waitTimer = null;
   let widgetId  = null;
+  let initTries = 0;
 
   function print(text, cls){
     out.textContent = "";
@@ -398,8 +399,21 @@
     } catch (err) { console.error("turnstile reset failed:", err); }
   }
 
-  window.onTurnstileLoad = function(){
+  /* onload fires while window.turnstile is still half-built — that is exactly
+     what "render is not a function" meant. ready() is Cloudflare's documented
+     wait for full initialisation, and it requires the script tag to carry
+     NEITHER async NOR defer. The poll is a backstop in case ready() never
+     fires; it checks for the METHOD, never merely the object. */
+  function initTurnstile(){
     if (widgetId !== null) return;
+
+    if (!window.turnstile || typeof window.turnstile.render !== "function"){
+      if (initTries++ < 40){ setTimeout(initTurnstile, 150); return; }
+      console.error("turnstile: render never became available");
+      gateNote("// The bouncer never clocked in. Reload and I'll try again, kid.");
+      return;
+    }
+
     try {
       widgetId = window.turnstile.render("#turnstile", {
         sitekey: TURNSTILE_SITE_KEY,
@@ -416,7 +430,8 @@
       console.error("turnstile render threw:", err);
       gateNote("// Cloudflare wouldn't take the sitekey — " + err.message + ". My end, kid.");
     }
-  };
+  }
+  window.initTurnstile = initTurnstile;
 
   function widgetUp(){ return widgetId !== null; }
 
@@ -425,7 +440,7 @@
     console.error("PROBE uncaught:", e.message, "@", e.filename + ":" + e.lineno);
   });
   console.log("PROBE script end; callbacks defined:",
-    typeof window.onTurnstileLoad, "| widgetId:", widgetId);
+    typeof window.initTurnstile, "| widgetId:", widgetId);
   [500, 1500, 3000, 6000, 9000].forEach((ms) => setTimeout(() => {
     const slot = document.getElementById("turnstile");
     console.log("PROBE t=" + ms,
@@ -449,6 +464,21 @@
   }, 10000);
 
 </script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
+<script>
+  /* Cloudflare's documented pattern: ready() AFTER a non-async, non-deferred
+     api.js. The fallback timer covers ready() never firing at all. */
+  try {
+    if (window.turnstile && typeof window.turnstile.ready === "function"){
+      window.turnstile.ready(window.initTurnstile);
+    } else {
+      window.initTurnstile();
+    }
+  } catch (err) {
+    console.error("turnstile ready() threw:", err);
+    window.initTurnstile();
+  }
+  setTimeout(window.initTurnstile, 2500);
+</script>
 </body>
 </html>
