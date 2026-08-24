@@ -68,7 +68,13 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
 - [x] Placeholder landing (`index.html`): breathing `not` hero.
 - [x] `uncle-dev.system.md` — Uncle Dev persona / behaviour spec.
 - [ ] Terminal-nav (`DIR /ABOUT` -> SYSTEM_SPECS.LOG etc.) + punchline bank. Static, buildable now.
-- [ ] Uncle Dev Worker (Mistral + Turnstile + rate limit). **Blocked: waiting on Mistral API key.**
+- [x] Uncle Dev bot — **LIVE** (`8c8014a`, `main`). Pages Function at
+      `functions/api/ask.js`, not a standalone Worker: same origin, same git push,
+      secrets in the Pages project. Mistral (`mistral-small-latest`) behind
+      server-side Turnstile — the model is never called before the challenge
+      passes. Plus a best-effort in-isolate per-IP throttle (no KV, no D1).
+      `MISTRAL_API_KEY` + `TURNSTILE_SECRET_KEY` set on **Production only** —
+      Preview is still empty, see Gotchas.
 - [ ] Cmd+Z ambient funnel -> unacceptable.dev.
 - [ ] Feed (static, git-based).
 
@@ -76,3 +82,50 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
 - [ ] Confession terminal: input box, two CTAs (void / blog-with-handle).
 - [ ] Submission -> email to owner -> approve -> paste into notso repo -> push -> live.
 - Not started. Bot comes first. (Do NOT copy `uncle-dev.system.md` here — the bot lives in notso.dev only.)
+
+---
+
+## Gotchas / notes
+
+**Pages binds secrets at BUILD time, and Production / Preview are SEPARATE
+stores.** A secret added in the dashboard after a deployment reads as
+`undefined` in that deployment until a *new build* runs — adding it does not
+retro-apply. This is what made `/api/ask` return the in-character 500
+(`// My wiring's loose on this end`) while both keys were visibly set in the
+dashboard.
+
+The trap: a missing **Preview** secret fails *identically* to a wrong key. Do
+not re-enter the Production values chasing it — the value was never the
+problem, the environment was. **The first preview branch will 500 until
+`MISTRAL_API_KEY` and `TURNSTILE_SECRET_KEY` are added to Preview separately.**
+After adding or rotating any Pages secret, always redeploy before testing.
+
+**Local dev.** `.dev.vars` is gitignored and untracked — it holds the Turnstile
+*test* keys (sitekey `1x00000000000000000000AA` 24 chars / secret
+`1x0000000000000000000000000000000AA` 35 chars, both always-pass). Those two
+lengths are also how you tell a real sitekey from a real secret: **sitekey 24,
+secret 35**, and both start `0x4AAAAAA`. Only the 24-char one is safe in
+`index.html`.
+
+Note `wrangler pages dev` cannot run on this MacBook Air — workerd needs
+macOS 13.5+ and it is on 12.6. The bot was tested by driving the real handler
+under Node with live Turnstile/Mistral calls, then re-verified against
+production.
+
+---
+
+## Next session
+
+Each item is independent and none requires touching the bot.
+
+1. **Terminal-nav** — `DIR /ABOUT` -> `SYSTEM_SPECS.LOG` etc. + punchline bank.
+   Static, buildable immediately, no blockers.
+2. **Cmd+Z ambient funnel** -> unacceptable.dev. ~30 lines of JS. Canned
+   pre-fill via URL param; the user's typed confession goes as a **POST body,
+   never a URL param**.
+3. **Feed** — static, git-based moderation. No KV, no D1, no CMS.
+
+If a browser voice-check came back off (too long / no `//` punchline / Greek
+answered in English), that jumps the queue: it is a `uncle-dev.system.md` edit
+plus re-embedding the prompt into `functions/api/ask.js`. Prompt only — no
+architecture change.
