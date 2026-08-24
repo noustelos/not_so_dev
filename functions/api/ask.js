@@ -89,8 +89,12 @@ async function turnstilePasses(token, ip, secret) {
     body: form,
     signal: AbortSignal.timeout(TURNSTILE_TIMEOUT_MS),
   });
-  if (!res.ok) return { ok: false, codes: ["siteverify-http-" + res.status] };
-  const data = await res.json();
+  /* siteverify returns 400 WITH a useful body for secret problems, so parse
+     regardless of status — discarding it hides invalid-input-secret behind a
+     bare HTTP code. */
+  let data = null;
+  try { data = await res.json(); } catch { /* non-JSON body */ }
+  if (!data) return { ok: false, codes: ["siteverify-http-" + res.status] };
   return { ok: data.success === true, codes: data["error-codes"] || [] };
 }
 
