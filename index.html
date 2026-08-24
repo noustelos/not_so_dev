@@ -277,7 +277,7 @@
      the widget (sitekey / hostname). Saying "ad blocker" for both sends
      people chasing the wrong thing. */
   function gateBlocked(){
-    gateNote(!window.turnstile
+    gateNote(!window.turnstile && !turnstileReady()
       ? "// Your ad blocker just bounced my bouncer. Allow challenges.cloudflare.com and reload — I'd drop the check entirely, but then the spam bots drink all my coffee."
       : "// The bouncer showed up but Cloudflare won't give him a badge — sitekey or hostname is off. That's my end, kid, not your browser.");
   }
@@ -312,7 +312,7 @@
       /* Tokens are single-use. Drop it and let Turnstile mint a fresh one —
          the callback refills `token` before the next question lands. */
       token = "";
-      if (widgetId !== null && window.turnstile) window.turnstile.reset(widgetId);
+      if (widgetId !== null && turnstileReady()) window.turnstile.reset(widgetId);
       setBusy(false);
       q.focus();
     }
@@ -327,7 +327,7 @@
       return;
     }
 
-    if (!window.turnstile){
+    if (!turnstileReady()){
       gateBlocked();
       print("// Can't let you in without the bot-check, kid. See the note above.", "err");
       return;
@@ -344,7 +344,7 @@
       waitTimer = setTimeout(() => {
         if (!pending) return;
         pending = null;
-        if (!window.turnstile || widgetId === null){
+        if (!turnstileReady() || widgetId === null){
           gateBlocked();
           print("// Can't let you in without the bot-check, kid. See the note above.", "err");
         } else {
@@ -366,8 +366,15 @@
      onload, and the watchdog. If the onload callback never fires — which is
      what a null widgetId with a loaded script means — the watchdog still
      gets the widget up instead of leaving a dead box. */
+  /* window.turnstile appears BEFORE its methods are attached, so testing the
+     object is a race — on a fast connection you catch the half-built stub and
+     render is not a function yet. Test the method itself. */
+  function turnstileReady(){
+    return !!(window.turnstile && typeof window.turnstile.render === "function");
+  }
+
   function renderWidget(){
-    if (widgetId !== null || !window.turnstile) return;
+    if (widgetId !== null || !turnstileReady()) return;
     try {
       widgetId = window.turnstile.render("#turnstile", {
         sitekey: TURNSTILE_SITE_KEY,
@@ -387,7 +394,7 @@
         },
         "expired-callback": () => {
           token = "";
-          if (widgetId !== null) window.turnstile.reset(widgetId);
+          if (widgetId !== null && turnstileReady()) window.turnstile.reset(widgetId);
         },
       });
     } catch (err) {
@@ -403,7 +410,7 @@
      that way: whoever wins the race, we render off the object that exists. */
   let waited = 0;
   const readyPoll = setInterval(() => {
-    if (window.turnstile){
+    if (turnstileReady()){
       clearInterval(readyPoll);
       renderWidget();
       if (widgetId === null) gateBlocked();   /* loaded but refused => sitekey/hostname */
