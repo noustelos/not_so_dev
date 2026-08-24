@@ -313,6 +313,111 @@
     transform:translateY(-0.32em);
   }
 
+  /* ---- terminal-nav ------------------------------------------------ */
+  /* Decorative directory listing: you click, you never type. Built on native
+     <details>/<summary>, so it works with zero JavaScript and gets keyboard
+     focus, Enter/Space toggling and screen-reader state for free. There is
+     deliberately no command parser and no second text input — the one command
+     line on this page is the ask box, and it stays that way. */
+  .dirnav{
+    width:100%;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    opacity:0;
+    animation:rise 900ms 1900ms ease-out forwards;
+  }
+
+  .dir-cmd{
+    color:var(--mute);
+    font-size:clamp(0.72rem, 1.9vw, 0.84rem);
+    letter-spacing:0.04em;
+    padding-bottom:0.5rem;
+    border-bottom:1px solid var(--rule);
+    user-select:none;
+  }
+  .dir-cmd .ps1{ font-size:inherit; }
+
+  .file{ border-bottom:1px solid var(--rule); }
+
+  /* list-style:none kills the marker in Firefox/Chrome, the ::-webkit rule
+     covers older Safari, which ignores the first. Both are needed. */
+  .file > summary{
+    display:flex;
+    align-items:baseline;
+    gap:0.9ch;
+    flex-wrap:wrap;
+    padding:0.55rem 0;
+    cursor:pointer;
+    list-style:none;
+    transition:color 160ms ease;
+  }
+  .file > summary::-webkit-details-marker{ display:none; }
+  .file > summary::before{
+    content:"+";
+    color:var(--phosphor);
+    width:1ch;
+    flex:0 0 auto;
+  }
+  .file[open] > summary::before{ content:"\2212"; }
+  .file > summary:focus-visible{ outline:1px solid var(--phosphor); outline-offset:2px; }
+
+  .file__name{
+    color:var(--bone);
+    font-size:clamp(0.74rem, 2vw, 0.86rem);
+    letter-spacing:0.06em;
+    white-space:nowrap;
+    transition:color 160ms ease;
+  }
+  .file > summary:hover .file__name,
+  .file > summary:focus-visible .file__name{ color:var(--phosphor); }
+
+  .file__desc{
+    color:var(--mute);
+    font-size:clamp(0.66rem, 1.7vw, 0.76rem);
+    letter-spacing:0.03em;
+  }
+
+  .file__body{
+    padding:0 0 0.9rem 1.9ch;
+    display:flex;
+    flex-direction:column;
+    gap:0.6rem;
+    max-width:52ch;
+  }
+  .file__body p{
+    color:var(--mute);
+    font-size:clamp(0.72rem, 1.9vw, 0.82rem);
+    line-height:1.65;
+  }
+  /* the two domains are the joke — lift them out of the muted body text */
+  .file__body strong{ color:var(--bone); font-weight:400; }
+
+  /* Punchline bank. Fixed per section rather than shuffled on load: a random
+     line means the page never renders twice the same and cannot be checked.
+     This is a SECOND home for Uncle Dev's voice next to uncle-dev.system.md —
+     they can drift apart, so read that file before writing a new one. */
+  .file__body .pun{ color:var(--phosphor); opacity:0.75; }
+
+  /* Not a <details>: there is nothing behind it yet, and a control that opens
+     to nothing is worse than an honest dead row. It becomes a real entry when
+     the feed ships — the listing above it does not change. */
+  .file--locked{
+    display:flex;
+    align-items:baseline;
+    gap:0.9ch;
+    flex-wrap:wrap;
+    padding:0.55rem 0;
+    user-select:none;
+  }
+  .file--locked::before{
+    content:"\00d7";
+    color:var(--rule);
+    width:1ch;
+    flex:0 0 auto;
+  }
+  .file--locked .file__name{ color:var(--rule); }
+
   /* ---- motion ----------------------------------------------------- */
   /* one-shot reveal for the "not" — it settles at its resting glow. */
   @keyframes notin{
@@ -326,7 +431,8 @@
   @keyframes blink{ 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
 
   @media (prefers-reduced-motion: reduce){
-    .stage,.hero,.meta,.site-foot,.terminal{ opacity:1; animation:none; transform:none; }
+    .stage,.hero,.meta,.site-foot,.terminal,.dirnav{ opacity:1; animation:none; transform:none; }
+    .file > summary,.file__name{ transition:none; }
     .mailto,.by{ transition:none; }
     .not{ opacity:0.66; animation:none; filter:none;
           text-shadow:0 0 22px rgba(217,119,87,0.22); }
@@ -359,6 +465,59 @@
 
       <output id="out" class="out" for="q" aria-live="polite"></output>
     </section>
+
+    <!-- Decorative only. Every row is a native <details> control, never a
+         command to type — see "Terminal-nav" in CLAUDE.md before adding a
+         parser or a second input here. -->
+    <nav class="dirnav" aria-label="About this site">
+      <p class="dir-cmd"><span class="ps1">guest@notso:~$</span> dir</p>
+
+      <details class="file">
+        <summary>
+          <span class="file__name">SYSTEM_SPECS.LOG</span>
+          <span class="file__desc">what this place is</span>
+        </summary>
+        <div class="file__body">
+          <p>Two domains, one joke. <strong>unacceptable.dev</strong> takes the
+             confession, <strong>notso.dev</strong> hands you an uncle. What sits
+             between them is a hyperlink and a person reading submissions &mdash;
+             no platform, no pipeline, no synergy.</p>
+          <p class="pun">// No roadmap, no Series A. A guy and a terminal.</p>
+        </div>
+      </details>
+
+      <details class="file">
+        <summary>
+          <span class="file__name">UNCLE_DEV.EXE</span>
+          <span class="file__desc">who answers you</span>
+        </summary>
+        <div class="file__body">
+          <p>A tired senior developer who has been shipping since dial-up. He
+             explains the command you blind-copied from an AI in about three
+             sentences, and he has never once made anyone feel stupid for
+             asking.</p>
+          <p class="pun">// He forgets the question the second it's answered. Call it discretion.</p>
+        </div>
+      </details>
+
+      <details class="file">
+        <summary>
+          <span class="file__name">README.TXT</span>
+          <span class="file__desc">how the box works</span>
+        </summary>
+        <div class="file__body">
+          <p>Type the question you were too embarrassed to google and hit ask.
+             No account, no email, no onboarding flow, no cookie banner begging
+             you to reconsider.</p>
+          <p class="pun">// Your senior googles the same thing in incognito.</p>
+        </div>
+      </details>
+
+      <p class="file file--locked">
+        <span class="file__name">CONFESSIONS.LOG</span>
+        <span class="file__desc">0 bytes &mdash; nobody has confessed yet</span>
+      </p>
+    </nav>
   </main>
 
   <footer class="site-foot">

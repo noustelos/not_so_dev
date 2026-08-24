@@ -84,7 +84,7 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
 
 ---
 
-## Terminal-nav (specced 2026-08-24, not built)
+## Terminal-nav (BUILT 2026-08-25)
 
 Site navigation disguised as an MS-DOS directory listing. Concern that the
 reference would be lost on vibe coders was **raised and dismissed by Nick**:
@@ -121,12 +121,30 @@ it unlocks by itself once the feed lands, with no rewrite of the nav.
 No `CONTACT.BAT`: `oops@notso.dev` is already in the footer, and a second copy
 is duplication without a joke.
 
-Open when building: where the punchline bank lives and whether it fires at
-random per load or is fixed per section (random means you can never check the
-same page twice). Whatever it is, it is a SECOND home for the voice alongside
-`uncle-dev.system.md` and the two can drift — keep them consistent by hand.
-Everything that looks like a command must be a real link or button: Tab order,
-screen readers, and `prefers-reduced-motion` all still apply.
+### As built
+
+**Native `<details>`/`<summary>`, zero JavaScript.** Keyboard focus,
+Enter/Space toggling and the expanded/collapsed announcement come free from the
+element. A buttons-plus-JS toggle would have been more code for worse
+accessibility. Marker is `+` / `−`; hiding the browser default needs BOTH
+`list-style:none` and `::-webkit-details-marker{display:none}` — the first is
+ignored by older Safari, the second by Firefox. Keep both.
+
+**Punchline bank: fixed per section, not shuffled.** This was the open
+question. Random was rejected — the page would never render twice the same, so
+nothing could be verified, and it would pull in JavaScript for a joke.
+Rotation can be layered on later. The lines live in the `.file__body` markup
+and are a **second home for Uncle Dev's voice** beside `uncle-dev.system.md`;
+read that file before writing a new one, they drift otherwise.
+
+**`CONFESSIONS.LOG` is a plain `<p>`, not a `<details>`.** A control that opens
+onto nothing is worse than an honest dead row, so it does not open at all. When
+the feed ships it becomes a real `<details>` and nothing around it changes.
+
+Body copy was written by Claude and **read and approved by Nick on 2026-08-25**
+— it is the site's first non-bot voice, so treat it as reviewed content, not
+placeholder. `.dirnav` is in the `prefers-reduced-motion` reset alongside the
+other faded blocks.
 
 ## Current status
 
@@ -143,7 +161,7 @@ screen readers, and `prefers-reduced-motion` all still apply.
       Footer carries `ANSWERS BY MISTRAL_AI/> EU` — see "Vendor attribution"
       below before editing that line.
 - [x] `uncle-dev.system.md` — Uncle Dev persona / behaviour spec.
-- [ ] Terminal-nav + punchline bank. **Fully specced 2026-08-24, not built.** See "Terminal-nav" below.
+- [x] Terminal-nav + punchline bank — **BUILT 2026-08-25**, verified in-browser. See "Terminal-nav" below.
 - [x] Uncle Dev bot — **LIVE** on `main` (bot code settled at `4d63ecd`). Pages Function at
       `functions/api/ask.js`, not a standalone Worker: same origin, same git push,
       secrets in the Pages project. Mistral (`mistral-small-latest`) behind
@@ -335,9 +353,9 @@ production.
 
 **Then, each independent and none requiring the bot to change:**
 
-1. **Terminal-nav** — decorative, one page, four entries. **Fully specced, zero
-   open questions, no blockers — start here.** Read the "Terminal-nav" section
-   above first; the shape was argued out and settled, not left to taste.
+1. ~~Terminal-nav~~ — **DONE 2026-08-25.** Only follow-up, and only if wanted:
+   rotating punchlines instead of fixed ones. That costs the ability to check
+   the same page twice, and needs JS. Not obviously worth it.
 2. **Cmd+Z ambient funnel** -> unacceptable.dev. ~30 lines of JS. Canned
    pre-fill via URL param; the user's typed confession goes as a **POST body,
    never a URL param**.
