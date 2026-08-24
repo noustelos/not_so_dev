@@ -151,6 +151,13 @@
   #send:focus-visible{ border-color:var(--phosphor); color:var(--phosphor); }
   #send:disabled{ opacity:0.4; cursor:not-allowed; }
 
+  .gatemsg{
+    color:var(--phosphor);
+    font-size:clamp(0.7rem, 1.9vw, 0.8rem);
+    line-height:1.6;
+    max-width:46ch;
+  }
+
   .out{
     display:block;
     font-size:clamp(0.82rem, 2.2vw, 0.95rem);
@@ -251,6 +258,20 @@
     out.appendChild(frag);
   }
 
+  /* Ad blockers routinely block challenges.cloudflare.com — and this audience
+     runs them. Say so where the widget should have been, in Uncle Dev's voice:
+     the gag points at the blocker, never at the person. */
+  function gateBlocked(){
+    const slot = document.getElementById("turnstile");
+    if (!slot || slot.dataset.blocked) return;
+    slot.dataset.blocked = "1";
+    slot.textContent = "";
+    const note = document.createElement("div");
+    note.className = "gatemsg";
+    note.textContent = "// Your ad blocker just bounced my bouncer. Allow challenges.cloudflare.com and reload — I'd drop the check entirely, but then the spam bots drink all my coffee.";
+    slot.appendChild(note);
+  }
+
   function setBusy(state){
     busy = state;
     send.disabled = state;
@@ -296,6 +317,12 @@
       return;
     }
 
+    if (!window.turnstile){
+      gateBlocked();
+      print("// Can't let you in without the bot-check, kid. See the note above.", "err");
+      return;
+    }
+
     if (!token){
       /* Challenge still in flight. Queue the question and fire it the moment
          the token lands, rather than dead-ending and making them retype. */
@@ -307,9 +334,12 @@
       waitTimer = setTimeout(() => {
         if (!pending) return;
         pending = null;
-        print(!window.turnstile || widgetId === null
-          ? "// The bouncer never turned up. Something's blocking challenges.cloudflare.com — ad blocker or privacy extension. Allow it and reload, kid."
-          : "// The bouncer's still squinting at your ID. If there's a checkbox above, tick it; otherwise reload, kid.", "err");
+        if (!window.turnstile || widgetId === null){
+          gateBlocked();
+          print("// Can't let you in without the bot-check, kid. See the note above.", "err");
+        } else {
+          print("// The bouncer's still squinting at your ID. If there's a checkbox above, tick it; otherwise reload, kid.", "err");
+        }
       }, 15000);
       return;
     }
@@ -325,10 +355,8 @@
   /* Distinguishes "script never loaded" (blocked / offline) from "challenge
      rendered but unsolved". Without this both are just silence. */
   setTimeout(() => {
-    if (!window.turnstile || widgetId === null){
-      print("// The bouncer never turned up. Something's blocking challenges.cloudflare.com — ad blocker or privacy extension. Allow it and reload, kid.", "err");
-    }
-  }, 8000);
+    if (!window.turnstile || widgetId === null) gateBlocked();
+  }, 5000);
 
   window.onTurnstileLoad = function(){
     try {
