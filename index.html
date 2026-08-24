@@ -330,9 +330,7 @@
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok){
-        if (data.code) console.error("api/ask rejected:", data.code);
-        print((data.error || "// Something went sideways on my end. Try again, kid.")
-              + (data.code ? "\n// [" + data.code + "]" : ""), "err");
+        print(data.error || "// Something went sideways on my end. Try again, kid.", "err");
       } else {
         print(data.answer || "// I've got nothing. Ask me again, kid.");
       }

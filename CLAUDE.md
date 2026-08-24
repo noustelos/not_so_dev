@@ -74,7 +74,12 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
       server-side Turnstile — the model is never called before the challenge
       passes. Plus a best-effort in-isolate per-IP throttle (no KV, no D1).
       `MISTRAL_API_KEY` + `TURNSTILE_SECRET_KEY` set on **Production only** —
-      Preview is still empty, see Gotchas.
+      Preview is still empty, see Gotchas. Verified end to end in-browser on
+      2026-08-24: widget solves, answer returns in voice with the `//`
+      punchline, follow-up questions work (token reset confirmed).
+      **Pending:** the Turnstile secret was pasted into chat during debugging
+      and should be rotated — rotate, update the same Pages field, redeploy.
+      The sitekey does not change.
 - [ ] Cmd+Z ambient funnel -> unacceptable.dev.
 - [ ] Feed (static, git-based).
 

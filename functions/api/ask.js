@@ -146,11 +146,11 @@ export async function onRequestPost(context) {
     verdict = { ok: false, codes: ["verify-threw-" + (err?.name || "error")] };
   }
   if (!verdict.ok) {
+    /* Logged, never returned: the codes describe server configuration
+       (invalid-input-secret and friends) and belong in the log, not in a
+       public response. */
     console.error("ask: turnstile rejected:", verdict.codes.join(","));
-    /* Codes are diagnostic, not secret — they name a server misconfiguration,
-       never anything about the user. Kept in the response while the deploy is
-       being verified. */
-    return json({ error: VOICE.turnstile, code: verdict.codes.join(",") }, 403);
+    return json({ error: VOICE.turnstile }, 403);
   }
 
   /* Throttle only after Turnstile, so a failed challenge can't burn a slot. */
