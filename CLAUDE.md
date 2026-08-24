@@ -76,7 +76,10 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
       `MISTRAL_API_KEY` + `TURNSTILE_SECRET_KEY` set on **Production only** —
       Preview is still empty, see Gotchas. Verified end to end in-browser on
       2026-08-24: widget solves, answer returns in voice with the `//`
-      punchline, follow-up questions work (token reset confirmed).
+      punchline, follow-up questions work (token reset confirmed). Greek in →
+      Greek out, with a Greek `//` punchline. **Known gap:** the Greek reply
+      does not use "ανιψιέ" as the spec requires — the English reply does use
+      "kid". Prompt-only fix if it matters; behaviour is otherwise on-spec.
       **Pending:** the Turnstile secret was pasted into chat during debugging
       and should be rotated — rotate, update the same Pages field, redeploy.
       The sitekey does not change.
