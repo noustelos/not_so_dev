@@ -362,13 +362,12 @@
     if (e.key === "Enter"){ e.preventDefault(); ask(); }
   });
 
-  /* Distinguishes "script never loaded" (blocked / offline) from "challenge
-     rendered but unsolved". Without this both are just silence. */
-  setTimeout(() => {
-    if (!window.turnstile || widgetId === null) gateBlocked();
-  }, 5000);
-
-  window.onTurnstileLoad = function(){
+  /* Render is idempotent-guarded and callable from two places: Turnstile's
+     onload, and the watchdog. If the onload callback never fires — which is
+     what a null widgetId with a loaded script means — the watchdog still
+     gets the widget up instead of leaving a dead box. */
+  function renderWidget(){
+    if (widgetId !== null || !window.turnstile) return;
     try {
       widgetId = window.turnstile.render("#turnstile", {
         sitekey: TURNSTILE_SITE_KEY,
@@ -378,9 +377,10 @@
           clearTimeout(waitTimer);
           if (pending && !busy){ const p = pending; pending = null; deliver(p); }
         },
-        /* Surfaces the real reason instead of a silent empty token. */
+        /* Cloudflare's own code — the one thing that names the real fault. */
         "error-callback": (code) => {
           token = ""; pending = null; setBusy(false);
+          console.error("turnstile error-callback:", code);
           gateNote("// Cloudflare turned the bouncer away (code " + code + "). That's my end, kid, not your browser.");
           print("// Bot-check won't run. See the note above, kid.", "err");
           return true;
@@ -391,9 +391,19 @@
         },
       });
     } catch (err) {
-      print("// I couldn't even hire the bouncer (" + err.message + "). On me, kid.", "err");
+      console.error("turnstile render threw:", err);
+      gateNote("// Cloudflare wouldn't take the sitekey — " + err.message + ". My end, kid.");
     }
-  };
+  }
+
+  window.onTurnstileLoad = renderWidget;
+
+  setTimeout(() => {
+    if (!window.turnstile){ gateBlocked(); return; }
+    renderWidget();                       /* onload may simply never have fired */
+    if (widgetId === null) gateBlocked(); /* still nothing => sitekey / hostname */
+  }, 5000);
+
 </script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
 </body>
