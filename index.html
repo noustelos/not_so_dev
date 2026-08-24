@@ -279,7 +279,7 @@
   function gateBlocked(){
     gateNote(!window.turnstile && !turnstileReady()
       ? "// Your ad blocker just bounced my bouncer. Allow challenges.cloudflare.com and reload — I'd drop the check entirely, but then the spam bots drink all my coffee."
-      : "// The bouncer showed up but Cloudflare won't give him a badge — sitekey or hostname is off. That's my end, kid, not your browser.");
+      : "// Cloudflare refused the badge for this sitekey on " + location.hostname + ". That's my end, kid, not your browser.");
   }
 
   function setBusy(state){
@@ -312,7 +312,7 @@
       /* Tokens are single-use. Drop it and let Turnstile mint a fresh one —
          the callback refills `token` before the next question lands. */
       token = "";
-      if (widgetId !== null && turnstileReady()) window.turnstile.reset(widgetId);
+      if (widgetId != null && turnstileReady()) window.turnstile.reset(widgetId);
       setBusy(false);
       q.focus();
     }
@@ -344,7 +344,7 @@
       waitTimer = setTimeout(() => {
         if (!pending) return;
         pending = null;
-        if (!turnstileReady() || widgetId === null){
+        if (!turnstileReady() || widgetId == null){
           gateBlocked();
           print("// Can't let you in without the bot-check, kid. See the note above.", "err");
         } else {
@@ -374,7 +374,7 @@
   }
 
   function renderWidget(){
-    if (widgetId !== null || !turnstileReady()) return;
+    if (widgetId != null || !turnstileReady()) return;
     try {
       widgetId = window.turnstile.render("#turnstile", {
         sitekey: TURNSTILE_SITE_KEY,
@@ -394,9 +394,16 @@
         },
         "expired-callback": () => {
           token = "";
-          if (widgetId !== null && turnstileReady()) window.turnstile.reset(widgetId);
+          if (widgetId != null && turnstileReady()) window.turnstile.reset(widgetId);
         },
       });
+      /* render() returns null/undefined when Cloudflare rejects the sitekey,
+         without throwing and without firing error-callback. Log it so the
+         cause is visible instead of inferred. */
+      console.log("turnstile.render returned:", widgetId, "sitekey:", TURNSTILE_SITE_KEY);
+      if (widgetId == null){
+        console.error("turnstile.render refused the sitekey — check it matches the widget in the Cloudflare dashboard, and that this hostname is on that widget's allow-list:", location.hostname);
+      }
     } catch (err) {
       console.error("turnstile render threw:", err);
       gateNote("// Cloudflare wouldn't take the sitekey — " + err.message + ". My end, kid.");
@@ -413,7 +420,7 @@
     if (turnstileReady()){
       clearInterval(readyPoll);
       renderWidget();
-      if (widgetId === null) gateBlocked();   /* loaded but refused => sitekey/hostname */
+      if (widgetId == null) gateBlocked();    /* loaded but refused => sitekey/hostname */
       return;
     }
     waited += 150;
