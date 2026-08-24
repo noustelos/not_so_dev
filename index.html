@@ -396,15 +396,27 @@
     }
   }
 
-  window.onTurnstileLoad = renderWidget;
-
-  setTimeout(() => {
-    if (!window.turnstile){ gateBlocked(); return; }
-    renderWidget();                       /* onload may simply never have fired */
-    if (widgetId === null) gateBlocked(); /* still nothing => sitekey / hostname */
-  }, 5000);
+  /* Do NOT depend on api.js's ?onload= callback. If anything loads Turnstile
+     twice — an extension injecting its own copy is common — the second copy
+     aborts with "Turnstile already has been loaded" and the callback never
+     fires, leaving a dead widget. Polling for readiness cannot be starved
+     that way: whoever wins the race, we render off the object that exists. */
+  let waited = 0;
+  const readyPoll = setInterval(() => {
+    if (window.turnstile){
+      clearInterval(readyPoll);
+      renderWidget();
+      if (widgetId === null) gateBlocked();   /* loaded but refused => sitekey/hostname */
+      return;
+    }
+    waited += 150;
+    if (waited >= 10000){
+      clearInterval(readyPoll);
+      gateBlocked();                          /* never arrived => blocked */
+    }
+  }, 150);
 
 </script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </body>
 </html>
