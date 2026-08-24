@@ -140,14 +140,17 @@
   }
   #q::placeholder{ color:var(--mute); }
 
-  /* An empty flex child collapses to zero width and Turnstile will not render
-     into it. Reserve the widget's actual size up front. */
-  #turnstile{
+  /* NB: this element must NOT be id="turnstile". An element id becomes a
+     global, so <div id="turnstile"> defines window.turnstile as the div —
+     api.js sees it, decides Turnstile is already loaded, and aborts before
+     rendering anything. That was the bug.
+     Also reserve the widget's size so an empty flex child cannot collapse. */
+  #ts-widget{
     flex:0 0 auto;
     min-width:300px;
     min-height:65px;
   }
-  @media (max-width:22rem){ #turnstile{ min-width:100%; } }
+  @media (max-width:22rem){ #ts-widget{ min-width:100%; } }
 
   .controls{
     display:flex;
@@ -241,7 +244,7 @@
       </div>
 
       <div class="controls">
-        <div id="turnstile" class="cf-turnstile"
+        <div id="ts-widget" class="cf-turnstile"
              data-sitekey="0x4AAAAAAEZqcunYx3BQf4uN"
              data-theme="dark"
              data-callback="onSuccess"
@@ -400,13 +403,13 @@
     token = "";
     try {
       if (window.turnstile && typeof window.turnstile.reset === "function"){
-        window.turnstile.reset("#turnstile");
+        window.turnstile.reset("#ts-widget");
       }
     } catch (err) { console.error("turnstile reset failed:", err); }
   }
 
   function widgetUp(){
-    const slot = document.getElementById("turnstile");
+    const slot = document.getElementById("ts-widget");
     return !!(slot && slot.childElementCount > 0);
   }
 
@@ -418,7 +421,7 @@
   console.log("PROBE script end; callbacks defined:",
     typeof window.onSuccess, "| impl:", "implicit");
   [500, 1500, 3000, 6000, 9000].forEach((ms) => setTimeout(() => {
-    const slot = document.getElementById("turnstile");
+    const slot = document.getElementById("ts-widget");
     console.log("PROBE t=" + ms,
       "turnstile:", typeof window.turnstile,
       "children:", slot ? slot.childElementCount : "NO SLOT",
@@ -439,9 +442,9 @@
       return;
     }
     try {
-      const slot = document.getElementById("turnstile");
+      const slot = document.getElementById("ts-widget");
       slot.classList.remove("cf-turnstile");
-      const id = window.turnstile.render("#turnstile", {
+      const id = window.turnstile.render("#ts-widget", {
         sitekey: slot.dataset.sitekey,
         theme: "dark",
         callback: window.onSuccess,
