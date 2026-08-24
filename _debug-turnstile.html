@@ -24,15 +24,6 @@
      data-callback="cb"
      data-error-callback="errcb"></div>
 
-<h2>REPLICA OF INDEX CONDITIONS (opacity:0 parent + zero-width flex child)</h2>
-<div style="opacity:0;animation:fadein 900ms 1700ms ease-out forwards">
-  <div style="display:flex;justify-content:space-between;gap:1rem">
-    <div id="slot2" class="cf-turnstile" data-sitekey="0x4AAAAAAEZqcunYx3BQf4uN" data-theme="dark"></div>
-    <span>ask</span>
-  </div>
-</div>
-<style>@keyframes fadein{from{opacity:0}to{opacity:1}}</style>
-
 <button onclick="report()">re-run report</button>
 <h2>REPORT</h2>
 <pre id="out">collecting…</pre>
@@ -66,9 +57,7 @@
 
     L.push("\n== WIDGET ==");
     const slot = document.getElementById("slot");
-    const slot2 = document.getElementById("slot2");
-    L.push(line("slot children (clean)", slot ? slot.childElementCount : "-", !!(slot && slot.childElementCount)));
-    L.push(line("slot2 children (replica)", slot2 ? slot2.childElementCount : "-", !!(slot2 && slot2.childElementCount)));
+    L.push(line("slot children", slot ? slot.childElementCount : "-", !!(slot && slot.childElementCount)));
     L.push(line("slot2 width", slot2 ? Math.round(slot2.getBoundingClientRect().width) : "-"));
     L.push(line("token received", window.tokenGot ? window.tokenGot.slice(0,18)+"…" : "none", !!window.tokenGot));
     L.push(line("error-callback code", window.errCode === null ? "none" : window.errCode));

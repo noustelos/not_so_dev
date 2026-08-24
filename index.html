@@ -241,12 +241,7 @@
       </div>
 
       <div class="controls">
-        <div id="turnstile" class="cf-turnstile"
-             data-sitekey="0x4AAAAAAEZqcunYx3BQf4uN"
-             data-theme="dark"
-             data-callback="onTurnstileSuccess"
-             data-error-callback="onTurnstileError"
-             data-expired-callback="onTurnstileExpired"></div>
+        <div id="turnstile"></div>
         <button id="send" type="button">ask &crarr;</button>
       </div>
 
@@ -257,9 +252,9 @@
   <footer class="tagline">life is vibecoding, every day.</footer>
 
 <script>
-  /* The Turnstile SITE key is public and lives on the #turnstile element's
-     data-sitekey — one source of truth. The SECRET key exists only in the
-     Pages environment. */
+  /* Public by design — the SITE key is safe in the client. The SECRET key
+     exists only in the Pages environment. */
+  const TURNSTILE_SITE_KEY = "0x4AAAAAAEZqcunYx3BQf4uN";
 
   const q    = document.getElementById("q");
   const send = document.getElementById("send");
@@ -269,6 +264,7 @@
   let pending  = null;  /* question asked before the challenge resolved */
   let busy     = false;
   let waitTimer = null;
+  let widgetId  = null;
 
   function print(text, cls){
     out.textContent = "";
@@ -374,53 +370,67 @@
     if (e.key === "Enter"){ e.preventDefault(); ask(); }
   });
 
-  /* Turnstile renders itself from the data-* attributes on #turnstile, and
-     calls these globals. Nothing here depends on api.js firing an onload hook
-     or on window.turnstile existing at any particular moment — which is what
-     kept breaking when a second copy of api.js aborted on load. */
-  window.onTurnstileSuccess = function(t){
+  /* One render, from Turnstile's own onload hook, guarded by widgetId so it
+     can never run twice. No ready() — Cloudflare forbids it alongside
+     async/defer and throws. No implicit attributes on the container, so there
+     is exactly one widget and one challenge iframe. */
+  function onSuccess(t){
     token = t;
     clearTimeout(waitTimer);
     if (pending && !busy){ const p = pending; pending = null; deliver(p); }
-  };
+  }
 
-  window.onTurnstileError = function(code){
+  function onError(code){
     token = ""; pending = null; setBusy(false);
     console.error("turnstile error:", code);
     gateNote("// Cloudflare turned the bouncer away (code " + code + "). That's my end, kid, not your browser.");
     print("// Bot-check won't run. See the note above, kid.", "err");
     return true;
-  };
+  }
 
-  window.onTurnstileExpired = function(){ token = ""; resetWidget(); };
+  function onExpired(){ token = ""; resetWidget(); }
 
-  /* One widget on the page, addressed by its container. */
+  /* Tokens are single-use: without this the second question 403s. */
   function resetWidget(){
+    token = "";
     try {
-      if (window.turnstile && typeof window.turnstile.reset === "function"){
-        window.turnstile.reset("#turnstile");
-      }
+      if (widgetId !== null && window.turnstile) window.turnstile.reset(widgetId);
     } catch (err) { console.error("turnstile reset failed:", err); }
   }
 
-  /* Turnstile renders into a SHADOW ROOT, so querySelector("iframe") never
-     finds anything and reports a working widget as broken. The host element
-     it injects is a plain child, so count children instead. */
-  function widgetUp(){
-    const slot = document.getElementById("turnstile");
-    return !!(slot && slot.childElementCount > 0);
-  }
+  window.onTurnstileLoad = function(){
+    if (widgetId !== null) return;
+    try {
+      widgetId = window.turnstile.render("#turnstile", {
+        sitekey: TURNSTILE_SITE_KEY,
+        theme: "dark",
+        callback: onSuccess,
+        "error-callback": onError,
+        "expired-callback": onExpired,
+      });
+      console.log("turnstile render ->", widgetId);
+      if (widgetId == null){
+        gateNote("// Cloudflare refused the badge for this sitekey on " + location.hostname + ". That's my end, kid, not your browser.");
+      }
+    } catch (err) {
+      console.error("turnstile render threw:", err);
+      gateNote("// Cloudflare wouldn't take the sitekey — " + err.message + ". My end, kid.");
+    }
+  };
+
+  function widgetUp(){ return widgetId !== null; }
 
   /* TEMPORARY probes — remove once the widget is confirmed working. */
   window.addEventListener("error", (e) => {
     console.error("PROBE uncaught:", e.message, "@", e.filename + ":" + e.lineno);
   });
   console.log("PROBE script end; callbacks defined:",
-    typeof window.onTurnstileSuccess, typeof window.onTurnstileError);
+    typeof window.onTurnstileLoad, "| widgetId:", widgetId);
   [500, 1500, 3000, 6000, 9000].forEach((ms) => setTimeout(() => {
     const slot = document.getElementById("turnstile");
     console.log("PROBE t=" + ms,
       "turnstile:", typeof window.turnstile,
+      "widgetId:", widgetId,
       "children:", slot ? slot.childElementCount : "NO SLOT",
       "class:", slot ? slot.className : "-",
       "noted:", slot ? !!slot.dataset.noted : "-",
@@ -439,6 +449,6 @@
   }, 10000);
 
 </script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
 </body>
 </html>
