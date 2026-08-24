@@ -84,6 +84,50 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
 
 ---
 
+## Terminal-nav (specced 2026-08-24, not built)
+
+Site navigation disguised as an MS-DOS directory listing. Concern that the
+reference would be lost on vibe coders was **raised and dismissed by Nick**:
+`DIR`, `.EXE` and `.LOG` read as "list of files" from pop culture alone, with
+no MS-DOS experience needed. Do not re-litigate it.
+
+**DECORATIVE, NOT INTERACTIVE.** The listing is links styled as a directory —
+you click, you never type. Rejected: a real command parser (`CD`, `TYPE`).
+Two reasons, both binding. It needs a help text, which trips the anti-goal
+*"no feature that needs a manual to get the joke"*. And the page already has
+one real command line — `guest@notso:~$ ask_uncle_Dev`. A second input beside
+it splits attention away from the one box that actually matters. **Do not add
+a typed command line to this page.**
+
+**ONE PAGE.** Content expands inside `index.html`; no routes, no extra HTML
+files. Three sections of two paragraphs each would be thin pages that hurt
+indexing rather than help it, and the Search Console task is still open. Nick:
+*"λιγότερο friction σε κάθε επίπεδο."*
+
+The four entries, agreed:
+
+| File | Holds | State |
+|---|---|---|
+| `SYSTEM_SPECS.LOG` | what notso.dev is — the two-domain joke | live |
+| `UNCLE_DEV.EXE` | who the uncle is, why there is no sign-up | live |
+| `README.TXT` | no app, no sign-up, just ask — how the box works | live |
+| `CONFESSIONS.LOG` | the feed | **locked** |
+
+`CONFESSIONS.LOG` is locked on purpose and is the best joke in the set:
+**`0 bytes — nobody has confessed yet`** (Nick's pick). It is a punchline and
+an honest placeholder at once — it promises no content that does not exist, and
+it unlocks by itself once the feed lands, with no rewrite of the nav.
+
+No `CONTACT.BAT`: `oops@notso.dev` is already in the footer, and a second copy
+is duplication without a joke.
+
+Open when building: where the punchline bank lives and whether it fires at
+random per load or is fixed per section (random means you can never check the
+same page twice). Whatever it is, it is a SECOND home for the voice alongside
+`uncle-dev.system.md` and the two can drift — keep them consistent by hand.
+Everything that looks like a command must be a real link or button: Tab order,
+screen readers, and `prefers-reduced-motion` all still apply.
+
 ## Current status
 
 ### notso.dev — this repo
@@ -97,7 +141,7 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
       bottom-left corner at `opacity:0.5`, full strength on hover/focus — it is
       a control, not content, and under the input the eye kept snagging on it.
 - [x] `uncle-dev.system.md` — Uncle Dev persona / behaviour spec.
-- [ ] Terminal-nav (`DIR /ABOUT` -> SYSTEM_SPECS.LOG etc.) + punchline bank. Static, buildable now.
+- [ ] Terminal-nav + punchline bank. **Fully specced 2026-08-24, not built.** See "Terminal-nav" below.
 - [x] Uncle Dev bot — **LIVE** on `main` (bot code settled at `4d63ecd`). Pages Function at
       `functions/api/ask.js`, not a standalone Worker: same origin, same git push,
       secrets in the Pages project. Mistral (`mistral-small-latest`) behind
@@ -126,7 +170,12 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
 ### unacceptable.dev — other repo
 - [ ] Confession terminal: input box, two CTAs (void / blog-with-handle).
 - [ ] Submission -> email to owner -> approve -> paste into notso repo -> push -> live.
-- Not started. Bot comes first. (Do NOT copy `uncle-dev.system.md` here — the bot lives in notso.dev only.)
+- Not started, but the **domain is owned** and Nick has committed to building
+  the confession box there (2026-08-24) — this is no longer hypothetical, and
+  it is the thing that unlocks `CONFESSIONS.LOG` in the terminal-nav. To be
+  built together in a later session; do not start it unprompted.
+- Bot comes first. (Do NOT copy `uncle-dev.system.md` here — the bot lives in
+  notso.dev only.)
 
 ---
 
@@ -269,8 +318,9 @@ production.
 
 **Then, each independent and none requiring the bot to change:**
 
-1. **Terminal-nav** — `DIR /ABOUT` -> `SYSTEM_SPECS.LOG` etc. + punchline bank.
-   Static, buildable immediately, no blockers.
+1. **Terminal-nav** — decorative, one page, four entries. **Fully specced, zero
+   open questions, no blockers — start here.** Read the "Terminal-nav" section
+   above first; the shape was argued out and settled, not left to taste.
 2. **Cmd+Z ambient funnel** -> unacceptable.dev. ~30 lines of JS. Canned
    pre-fill via URL param; the user's typed confession goes as a **POST body,
    never a URL param**.
