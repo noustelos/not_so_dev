@@ -411,6 +411,23 @@
     return !!(slot && slot.childElementCount > 0);
   }
 
+  /* TEMPORARY probes — remove once the widget is confirmed working. */
+  window.addEventListener("error", (e) => {
+    console.error("PROBE uncaught:", e.message, "@", e.filename + ":" + e.lineno);
+  });
+  console.log("PROBE script end; callbacks defined:",
+    typeof window.onTurnstileSuccess, typeof window.onTurnstileError);
+  [500, 1500, 3000, 6000, 9000].forEach((ms) => setTimeout(() => {
+    const slot = document.getElementById("turnstile");
+    console.log("PROBE t=" + ms,
+      "turnstile:", typeof window.turnstile,
+      "children:", slot ? slot.childElementCount : "NO SLOT",
+      "class:", slot ? slot.className : "-",
+      "noted:", slot ? !!slot.dataset.noted : "-",
+      "w:", slot ? Math.round(slot.getBoundingClientRect().width) : "-",
+      "token:", token ? "yes" : "no");
+  }, ms));
+
   /* An actual rendered widget puts an iframe in the slot. That, not a guess
      about script state, is how we tell "up" from "never arrived". */
   setTimeout(() => {
