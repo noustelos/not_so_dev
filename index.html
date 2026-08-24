@@ -380,44 +380,13 @@
     } catch (err) { console.error("turnstile reset failed:", err); }
   }
 
+  /* Turnstile renders into a SHADOW ROOT, so querySelector("iframe") never
+     finds anything and reports a working widget as broken. The host element
+     it injects is a plain child, so count children instead. */
   function widgetUp(){
     const slot = document.getElementById("turnstile");
-    return !!(slot && slot.querySelector("iframe"));
+    return !!(slot && slot.childElementCount > 0);
   }
-
-  /* If the api.js copy that won the race was loaded in explicit mode, it never
-     scans for .cf-turnstile and nothing renders on its own — which is exactly
-     what the console showed: turnstile present, no widget. ready() queues the
-     callback until the API is genuinely usable, which is the guarantee a
-     typeof check cannot give. Sitekey is read back off the element so it
-     still lives in exactly one place. */
-  function renderFallback(){
-    if (widgetUp()) return;
-    if (!window.turnstile){ console.error("turnstile fallback: window.turnstile missing"); return; }
-    if (typeof window.turnstile.ready !== "function"){
-      console.error("turnstile fallback: ready() unavailable, typeof =", typeof window.turnstile.ready);
-      return;
-    }
-    console.log("turnstile fallback: calling ready()");
-    window.turnstile.ready(() => {
-      const slot = document.getElementById("turnstile");
-      if (!slot || widgetUp()) return;
-      slot.classList.remove("cf-turnstile");   /* so implicit can't double up */
-      try {
-        const id = window.turnstile.render("#turnstile", {
-          sitekey: slot.dataset.sitekey,
-          theme: "dark",
-          callback: window.onTurnstileSuccess,
-          "error-callback": window.onTurnstileError,
-          "expired-callback": window.onTurnstileExpired,
-        });
-        console.log("turnstile fallback render returned:", id);
-      } catch (err) {
-        console.error("turnstile fallback render threw:", err);
-      }
-    });
-  }
-  setTimeout(renderFallback, 3000);
 
   /* An actual rendered widget puts an iframe in the slot. That, not a guess
      about script state, is how we tell "up" from "never arrived". */
