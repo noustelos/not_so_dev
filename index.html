@@ -51,6 +51,16 @@
     gap:clamp(1rem, 3vw, 1.6rem);
     text-align:center;
     padding-block:clamp(1.5rem, 5vw, 3rem);
+  }
+
+  /* The hero fade lives here, NOT on .stage. .stage is an ancestor of the
+     Turnstile container, and Turnstile will not build inside an invisible
+     ancestor — fading the whole stage silently kills the bot. */
+  .hero{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:clamp(1rem, 3vw, 1.6rem);
     opacity:0;
     animation:rise 900ms 120ms ease-out forwards;
   }
@@ -205,7 +215,7 @@
   @keyframes blink{ 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
 
   @media (prefers-reduced-motion: reduce){
-    .stage,.meta,.tagline{ opacity:1; animation:none; transform:none; }
+    .stage,.hero,.meta,.tagline{ opacity:1; animation:none; transform:none; }
     .not{ opacity:0.9; animation:none; filter:none;
           text-shadow:0 0 18px rgba(217,119,87,0.28); }
     .meta .cursor{ animation:none; }
@@ -215,10 +225,12 @@
 </head>
 <body>
   <main class="stage">
-    <h1 class="wordmark" aria-label="not so.dev">
-      <span class="not">not&nbsp;</span><span class="so">so.dev</span>
-    </h1>
-    <p class="meta">// no app, no sign-up, just ask<span class="cursor">_</span></p>
+    <div class="hero">
+      <h1 class="wordmark" aria-label="not so.dev">
+        <span class="not">not&nbsp;</span><span class="so">so.dev</span>
+      </h1>
+      <p class="meta">// no app, no sign-up, just ask<span class="cursor">_</span></p>
+    </div>
 
     <section class="terminal">
       <div class="ask">
