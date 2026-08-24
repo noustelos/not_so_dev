@@ -261,15 +261,25 @@
   /* Ad blockers routinely block challenges.cloudflare.com — and this audience
      runs them. Say so where the widget should have been, in Uncle Dev's voice:
      the gag points at the blocker, never at the person. */
-  function gateBlocked(){
+  function gateNote(msg){
     const slot = document.getElementById("turnstile");
-    if (!slot || slot.dataset.blocked) return;
-    slot.dataset.blocked = "1";
+    if (!slot || slot.dataset.noted) return;
+    slot.dataset.noted = "1";
     slot.textContent = "";
     const note = document.createElement("div");
     note.className = "gatemsg";
-    note.textContent = "// Your ad blocker just bounced my bouncer. Allow challenges.cloudflare.com and reload — I'd drop the check entirely, but then the spam bots drink all my coffee.";
+    note.textContent = msg;
     slot.appendChild(note);
+  }
+
+  /* Two very different faults that used to look identical. Blocked = the
+     script never arrived. Render failed = it arrived and Cloudflare refused
+     the widget (sitekey / hostname). Saying "ad blocker" for both sends
+     people chasing the wrong thing. */
+  function gateBlocked(){
+    gateNote(!window.turnstile
+      ? "// Your ad blocker just bounced my bouncer. Allow challenges.cloudflare.com and reload — I'd drop the check entirely, but then the spam bots drink all my coffee."
+      : "// The bouncer showed up but Cloudflare won't give him a badge — sitekey or hostname is off. That's my end, kid, not your browser.");
   }
 
   function setBusy(state){
@@ -371,7 +381,8 @@
         /* Surfaces the real reason instead of a silent empty token. */
         "error-callback": (code) => {
           token = ""; pending = null; setBusy(false);
-          print("// The bouncer's ID scanner is jammed (code " + code + "). That's my end, not yours, kid.", "err");
+          gateNote("// Cloudflare turned the bouncer away (code " + code + "). That's my end, kid, not your browser.");
+          print("// Bot-check won't run. See the note above, kid.", "err");
           return true;
         },
         "expired-callback": () => {
