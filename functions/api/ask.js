@@ -121,8 +121,11 @@ export async function onRequestPost(context) {
   if (!question) return json({ error: VOICE.empty }, 400);
   if (question.length > MAX_QUESTION_CHARS) return json({ error: VOICE.tooLong }, 400);
 
-  if (!env.TURNSTILE_SECRET_KEY || !env.MISTRAL_API_KEY) {
-    console.error("ask: missing MISTRAL_API_KEY or TURNSTILE_SECRET_KEY binding");
+  const missing = ["TURNSTILE_SECRET_KEY", "MISTRAL_API_KEY"].filter((k) => !env[k]);
+  if (missing.length) {
+    /* Names only, never values — and only to the log, never to the caller.
+       Pages binds secrets at BUILD time: add them, then redeploy. */
+    console.error(`ask: missing binding(s): ${missing.join(", ")} — redeploy after adding`);
     return json({ error: VOICE.misconfigured }, 500);
   }
 
