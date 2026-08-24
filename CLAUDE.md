@@ -30,7 +30,7 @@ Feed content unit: a `NOT SO [X]` tag + the story. Owner assigns/curates the tag
 
 ## notso.dev — the Uncle Dev bot
 The core product. The askXXX model with a soul: **no app, no sign-up, just ask.**
-- Single terminal box: `guest@notso:~$ ask_uncle [question]`.
+- Single terminal box: `guest@notso:~$ ask_uncle_Dev [question]`.
 - Persona + full behaviour spec lives in **`uncle-dev.system.md`** (notso.dev repo only). English-first, Greek if the user writes Greek. 2-3 sentences, one real-life metaphor, one `//` decompression punchline. Stays strictly in the dev lane.
 - Backend: **Mistral API**, called from a **Cloudflare Worker**. API key is a Worker **secret** (`wrangler secret`) — never in code, never client-side.
 - Abuse/cost control on the no-sign-up box: **Turnstile** (bot filter) **+ per-IP rate limiting**. Both, always. "Just ask" is open UX and an open cost door at the same time.
@@ -65,7 +65,15 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
 ## Current status
 
 ### notso.dev — this repo
-- [x] Placeholder landing (`index.html`): breathing `not` hero.
+- [x] Placeholder landing (`index.html`): static orange `not` hero. It used to
+      breathe on a loop; on a real screen that read as flicker at every
+      amplitude and speed tried, so the loop was **cut** (2026-08-24) in favour
+      of a one-shot `notin` fade to a resting `opacity:0.66`. Do not reintroduce
+      a pulse on the hero. The `prefers-reduced-motion` fallback is now pixel-
+      identical to the animated end state — only the fade is dropped.
+      Prompt label is `ask_uncle_Dev`. The Turnstile badge sits fixed in the
+      bottom-left corner at `opacity:0.5`, full strength on hover/focus — it is
+      a control, not content, and under the input the eye kept snagging on it.
 - [x] `uncle-dev.system.md` — Uncle Dev persona / behaviour spec.
 - [ ] Terminal-nav (`DIR /ABOUT` -> SYSTEM_SPECS.LOG etc.) + punchline bank. Static, buildable now.
 - [x] Uncle Dev bot — **LIVE** on `main` (bot code settled at `4d63ecd`). Pages Function at
@@ -162,6 +170,28 @@ status alone hides the real cause. To verify a secret without exposing it:
 `functions/api/ask.js` logs these codes but deliberately does not return them.
 If a Turnstile failure ever needs diagnosing from the browser again, add
 `code: verdict.codes.join(",")` to the 403 JSON for one deploy, then remove it.
+
+**`position:fixed` is not fixed to the viewport if any ancestor is
+transformed.** Any ancestor with a `transform` other than `none` becomes the
+containing block for its `position:fixed` descendants. The reveal animations
+here (`rise`) use `animation-fill-mode: forwards`, which parks the element on
+`transform:translateY(0)` **permanently** — a non-`none` value. So `.hero`,
+`.terminal`, `.meta` and `.site-foot` are all containing blocks forever, not
+just during the 900ms. The Turnstile badge, styled `fixed; left:1rem;
+bottom:1rem` while still nested in `.terminal`, pinned itself to the terminal's
+bottom-left corner and landed on top of the answer text. The fix is markup, not
+CSS: `#ts-widget` is a **direct child of `<body>`**. Do not move it back inside
+`main`, and do not try to fix it by removing the transform — four elements need
+`rise`.
+
+**Turnstile `code 110200` = unknown domain, and it is the expected result of a
+local preview.** The sitekey is scoped to `notso.dev`, so VS Code Go Live
+(`127.0.0.1:5500`) can never build the widget — the container renders a stub
+with a "Troubleshoot" link. This is not a regression and not a key problem.
+**Decision (2026-08-24): leave it.** `localhost`/`127.0.0.1` were deliberately
+NOT added to the production sitekey's Hostname Management — a permanent
+loosening of the live key for a temporary preview is a bad trade. Go Live is
+for checking layout only; the bot flow is verified against production.
 
 **Local dev.** `.dev.vars` is gitignored and untracked — it holds the Turnstile
 *test* keys (sitekey `1x00000000000000000000AA` 24 chars / secret

@@ -73,12 +73,14 @@
     white-space:nowrap;
   }
 
-  /* reserve the "not" slot so nothing reflows when it ghosts out */
+  /* The "not" holds still. A pulsing hero read as flicker on a real screen
+     no matter how slow or shallow the cycle, so there is no animation here
+     at all — it fades in with the wordmark and stays put. */
   .not{
     display:inline-block;
     color:var(--phosphor);
     opacity:0;
-    animation:breathe 5.6s 1150ms ease-in-out infinite;
+    animation:notin 900ms 1150ms ease-out forwards;
   }
   .so{ color:var(--bone); }
 
@@ -146,14 +148,36 @@
      of window, so <div id="turnstile"> makes window.turnstile the div itself;
      api.js checks window.turnstile, finds it already set, logs "Turnstile
      already has been loaded" and aborts without rendering. Cost a long
-     debugging session — the warning names the wrong cause.
-     Size is reserved so an empty flex child cannot collapse to zero width. */
+     debugging session — the warning names the wrong cause. */
+  /* The badge is a control, not content. Parked in the bottom-left corner
+     (the reCAPTCHA convention) it stays reachable without sitting in the
+     reading path directly under the input, where the eye kept returning to it.
+     It must remain GENUINELY visible: Turnstile refuses to build inside a
+     hidden, zero-size or zero-opacity container, so this only moves, scales
+     and dims it. Never display:none / visibility:hidden / opacity:0 here.
+     Fixed size, because position:fixed removes it from the flex flow. */
   #ts-widget{
-    flex:0 0 auto;
-    min-width:300px;
-    min-height:65px;
+    position:fixed;
+    left:clamp(0.75rem, 2vw, 1.25rem);
+    bottom:clamp(0.75rem, 2vw, 1.25rem);
+    z-index:5;
+    width:300px;
+    height:65px;
+    transform:scale(0.8);
+    transform-origin:bottom left;
+    opacity:0.5;
+    transition:opacity 200ms ease;
   }
-  @media (max-width:22rem){ #ts-widget{ min-width:100%; } }
+  /* full strength the moment it is deliberately looked at or interacted with */
+  #ts-widget:hover,
+  #ts-widget:focus-within{ opacity:1; }
+
+  /* On short/narrow screens the fixed badge would sit on top of the centred
+     footer, so reserve a strip for it at the bottom of the page instead. */
+  @media (max-width:52rem){
+    body{ padding-bottom:5rem; }
+    #ts-widget{ transform:scale(0.7); }
+  }
 
   .controls{
     display:flex;
@@ -274,10 +298,10 @@
   }
 
   /* ---- motion ----------------------------------------------------- */
-  @keyframes breathe{
-    0%,100%{ opacity:0.05; filter:blur(0.45px); text-shadow:none; }
-    50%    { opacity:0.92; filter:blur(0);
-             text-shadow:0 0 20px rgba(217,119,87,0.32); }
+  /* one-shot reveal for the "not" — it settles at its resting glow. */
+  @keyframes notin{
+    from{ opacity:0; }
+    to  { opacity:0.66; text-shadow:0 0 22px rgba(217,119,87,0.22); }
   }
   @keyframes rise{
     from{ opacity:0; transform:translateY(0.4rem); }
@@ -288,8 +312,8 @@
   @media (prefers-reduced-motion: reduce){
     .stage,.hero,.meta,.site-foot,.terminal{ opacity:1; animation:none; transform:none; }
     .mailto,.by{ transition:none; }
-    .not{ opacity:0.9; animation:none; filter:none;
-          text-shadow:0 0 18px rgba(217,119,87,0.28); }
+    .not{ opacity:0.66; animation:none; filter:none;
+          text-shadow:0 0 22px rgba(217,119,87,0.22); }
     .meta .cursor{ animation:none; }
     #send{ transition:none; }
   }
@@ -306,19 +330,13 @@
 
     <section class="terminal">
       <div class="ask">
-        <label class="ps1" for="q">guest@notso:~$ ask_uncle</label>
+        <label class="ps1" for="q">guest@notso:~$ ask_uncle_Dev</label>
         <input id="q" type="text" maxlength="600" autocomplete="off"
                autocapitalize="off" spellcheck="false"
                placeholder="what does npm audit fix --force actually do?">
       </div>
 
       <div class="controls">
-        <div id="ts-widget" class="cf-turnstile"
-             data-sitekey="0x4AAAAAAEZqcunYx3BQf4uN"
-             data-theme="dark"
-             data-callback="onSuccess"
-             data-error-callback="onError"
-             data-expired-callback="onExpired"></div>
         <div id="gatemsg" class="gatemsg"></div>
         <button id="send" type="button">ask &crarr;</button>
       </div>
@@ -338,6 +356,19 @@
          is decorative, so it stays out of the accessible name. -->
     <a class="by" href="https://noustelos.gr/" target="_blank" rel="noopener">A <span class="by__name">NOUSTELOS_STUDIO</span> PROJECT<span class="by__mark" aria-hidden="true">/&gt;</span></a>
   </footer>
+
+  <!-- Deliberately a direct child of <body>, NOT inside .terminal. An ancestor
+       with any transform other than none becomes the containing block for its
+       position:fixed descendants, and .terminal's `animation:rise ... forwards`
+       parks it on transform:translateY(0) permanently. Nested, the badge pinned
+       itself to the terminal's bottom-left corner instead of the viewport's and
+       landed on top of the answer text. Keep it out here. -->
+  <div id="ts-widget" class="cf-turnstile"
+       data-sitekey="0x4AAAAAAEZqcunYx3BQf4uN"
+       data-theme="dark"
+       data-callback="onSuccess"
+       data-error-callback="onError"
+       data-expired-callback="onExpired"></div>
 
 <script>
   /* The public SITE key lives on #ts-widget's data-sitekey — one source of
