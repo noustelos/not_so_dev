@@ -234,6 +234,7 @@
   let token    = "";    /* set by Turnstile's success callback, not polled */
   let pending  = null;  /* question asked before the challenge resolved */
   let busy     = false;
+  let waitTimer = null;
 
   function print(text, cls){
     out.textContent = "";
@@ -300,6 +301,16 @@
          the token lands, rather than dead-ending and making them retype. */
       pending = question;
       print("uncle dev is making sure you're not a robot...", "working");
+
+      /* Don't let a stuck challenge hang forever in silence. */
+      clearTimeout(waitTimer);
+      waitTimer = setTimeout(() => {
+        if (!pending) return;
+        pending = null;
+        print(!window.turnstile || widgetId === null
+          ? "// The bouncer never turned up. Something's blocking challenges.cloudflare.com — ad blocker or privacy extension. Allow it and reload, kid."
+          : "// The bouncer's still squinting at your ID. If there's a checkbox above, tick it; otherwise reload, kid.", "err");
+      }, 15000);
       return;
     }
 
@@ -311,6 +322,14 @@
     if (e.key === "Enter"){ e.preventDefault(); ask(); }
   });
 
+  /* Distinguishes "script never loaded" (blocked / offline) from "challenge
+     rendered but unsolved". Without this both are just silence. */
+  setTimeout(() => {
+    if (!window.turnstile || widgetId === null){
+      print("// The bouncer never turned up. Something's blocking challenges.cloudflare.com — ad blocker or privacy extension. Allow it and reload, kid.", "err");
+    }
+  }, 8000);
+
   window.onTurnstileLoad = function(){
     try {
       widgetId = window.turnstile.render("#turnstile", {
@@ -318,6 +337,7 @@
         theme: "dark",
         callback: (t) => {
           token = t;
+          clearTimeout(waitTimer);
           if (pending && !busy){ const p = pending; pending = null; deliver(p); }
         },
         /* Surfaces the real reason instead of a silent empty token. */
