@@ -351,15 +351,26 @@ production.
   metaphor). Plus: stay general when unsure of a flag's exact behaviour —
   vague-and-true over specific-and-wrong.
 
-**Then, each independent and none requiring the bot to change:**
+**notso.dev is feature-complete for now.** Landing, bot and terminal-nav are
+all live. ~~Terminal-nav~~ done 2026-08-25; the only follow-up left on it is
+rotating punchlines instead of fixed ones, which costs the ability to check the
+same page twice and needs JS — not obviously worth it.
 
-1. ~~Terminal-nav~~ — **DONE 2026-08-25.** Only follow-up, and only if wanted:
-   rotating punchlines instead of fixed ones. That costs the ability to check
-   the same page twice, and needs JS. Not obviously worth it.
+**The remaining two notso.dev items are NO LONGER independent. Both are blocked
+on `unacceptable.dev` existing, so the confession box comes first:**
+
+1. **Confession terminal on `unacceptable.dev`** — the actual next build. The
+   domain is owned; Nick asked to build it together, so **do not start it
+   unprompted.** Remember the hard siloing rule: separate repo, separate Pages
+   project, separate secrets, shared elements copied by hand and never
+   imported. The riskiest moment is creating the Pages project — it is easy to
+   deploy over the existing one instead of making a new one.
 2. **Cmd+Z ambient funnel** -> unacceptable.dev. ~30 lines of JS. Canned
    pre-fill via URL param; the user's typed confession goes as a **POST body,
-   never a URL param**.
-3. **Feed** — static, git-based moderation. No KV, no D1, no CMS.
+   never a URL param**. Pointless before there is a page to land on.
+3. **Feed** — static, git-based moderation. No KV, no D1, no CMS. Nothing to
+   feed it until confessions are being submitted and moderated, and it is what
+   unlocks `CONFESSIONS.LOG` in the terminal-nav.
 
 If a browser voice-check came back off (too long / no `//` punchline / Greek
 answered in English), that jumps the queue: it is a `uncle-dev.system.md` edit
