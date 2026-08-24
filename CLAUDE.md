@@ -181,9 +181,14 @@ production.
 
 **Open actions first — carried over, both small:**
 
-- **Mistral spend cap.** Still not set. The endpoint is live and billable, and
-  this is the only control that bounds the worst case; the Turnstile gate and
-  the per-IP throttle are both probabilistic. Do this before adding traffic.
+- ~~Mistral spend cap~~ — **DONE 2026-08-24: EUR 15 cap set on the Mistral
+  account.** This is the hard ceiling; Turnstile and the per-IP throttle are
+  probabilistic and cannot bound cost on their own. At roughly EUR 0.0002 per
+  question (~1000 input + 256 output tokens on Mistral Small) that is on the
+  order of tens of thousands of questions — far above fun-project volume, so it
+  caps an abuse scenario without throttling real use. If the bot ever goes
+  quiet with no Turnstile error, check whether the cap was reached before
+  debugging anything else.
 - **Verify the secret rotation** once the ~2h grace window has passed (see the
   status entry). Symptom of failure: every question answers "the bouncer didn't
   recognise you".
