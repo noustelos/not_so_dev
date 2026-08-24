@@ -140,6 +140,8 @@ screen readers, and `prefers-reduced-motion` all still apply.
       Prompt label is `ask_uncle_Dev`. The Turnstile badge sits fixed in the
       bottom-left corner at `opacity:0.5`, full strength on hover/focus — it is
       a control, not content, and under the input the eye kept snagging on it.
+      Footer carries `ANSWERS BY MISTRAL_AI/> EU` — see "Vendor attribution"
+      below before editing that line.
 - [x] `uncle-dev.system.md` — Uncle Dev persona / behaviour spec.
 - [ ] Terminal-nav + punchline bank. **Fully specced 2026-08-24, not built.** See "Terminal-nav" below.
 - [x] Uncle Dev bot — **LIVE** on `main` (bot code settled at `4d63ecd`). Pages Function at
@@ -276,6 +278,21 @@ Mistral's `finish_reason` and, on `"length"`, trims back to the last complete
 sentence — a dangling character reads as a broken site. That trim sacrifices
 the `//` punchline when it fires, so it logs a warning: **if that warning shows
 up regularly, tighten the prompt, do not raise the ceiling again.**
+
+**Vendor attribution names the model's ORIGIN, never the data's path.**
+The footer line is `ANSWERS BY MISTRAL_AI/> EU` (added 2026-08-24, Nick's
+wording). "EU" says the model is European. It must never be widened into
+anything a reader could take as a privacy guarantee — "your data stays in the
+EU", "GDPR-safe", "EU-hosted". That is a legally loaded claim, it sits right
+under a box where people type questions, and this site has no terms, no privacy
+policy, and no verified answer on where Mistral processes or how long it
+retains prompts. Attribution is safe; a promise is not.
+
+**No link and no logo on it, both deliberate.** Mistral is a supplier, not a
+collaborator — a hyperlink reads as endorsement and sends traffic off a
+one-page site for nothing in return. Contrast the `NOUSTELOS_STUDIO` credit,
+which IS linked precisely because the outbound traffic is the point of it. The
+logo is skipped to avoid pulling in brand guidelines over a footer line.
 
 **Local dev.** `.dev.vars` is gitignored and untracked — it holds the Turnstile
 *test* keys (sitekey `1x00000000000000000000AA` 24 chars / secret

@@ -288,6 +288,22 @@
   .by:hover .by__name,
   .by:focus-visible .by__name{ color:var(--bone); }
 
+  /* Vendor attribution, not a partnership and not a privacy claim: it names
+     where the model comes from, never where the data goes. No link — Mistral
+     is a supplier, and a hyperlink would read as an endorsement while sending
+     traffic off a one-page site. No logo either; that pulls in brand
+     guidelines for nothing. Sits between the tagline and the studio credit,
+     dimmer than one and warmer than the other. */
+  .engine{
+    font-size:clamp(0.6rem, 1.5vw, 0.68rem);
+    font-weight:700;
+    letter-spacing:0.09em;
+    line-height:1;
+    color:var(--rule);
+    white-space:nowrap;
+  }
+  .engine__name{ color:var(--mute); }
+
   /* the studio's mark, not punctuation */
   .by__mark{
     display:inline-block;
@@ -350,6 +366,8 @@
       <!--email_off--><a class="mailto" href="mailto:oops@notso.dev">oops@notso.dev</a><!--/email_off-->
       <span class="tagline">life is vibecoding, every day.</span>
     </div>
+
+    <p class="engine">ANSWERS BY <span class="engine__name">MISTRAL_AI</span><span class="by__mark" aria-hidden="true">/&gt;</span> EU</p>
 
     <!-- rel is "noopener" only, deliberately: noreferrer would hide that the
          traffic came from here, and attribution is the whole point. The "/>"
