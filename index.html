@@ -218,7 +218,12 @@
       </div>
 
       <div class="controls">
-        <div id="turnstile"></div>
+        <div id="turnstile" class="cf-turnstile"
+             data-sitekey="0x4AAAAAAEZqcunYx3BQf4uN"
+             data-theme="dark"
+             data-callback="onTurnstileSuccess"
+             data-error-callback="onTurnstileError"
+             data-expired-callback="onTurnstileExpired"></div>
         <button id="send" type="button">ask &crarr;</button>
       </div>
 
@@ -229,15 +234,14 @@
   <footer class="tagline">life is vibecoding, every day.</footer>
 
 <script>
-  /* Public by design — the Turnstile SITE key is safe in the client.
-     The SECRET key lives only in the Pages environment. */
-  const TURNSTILE_SITE_KEY = "0x4AAAAAAEZqcunYx3BQf4uN";
+  /* The Turnstile SITE key is public and lives on the #turnstile element's
+     data-sitekey — one source of truth. The SECRET key exists only in the
+     Pages environment. */
 
   const q    = document.getElementById("q");
   const send = document.getElementById("send");
   const out  = document.getElementById("out");
 
-  let widgetId = null;
   let token    = "";    /* set by Turnstile's success callback, not polled */
   let pending  = null;  /* question asked before the challenge resolved */
   let busy     = false;
@@ -276,12 +280,6 @@
      script never arrived. Render failed = it arrived and Cloudflare refused
      the widget (sitekey / hostname). Saying "ad blocker" for both sends
      people chasing the wrong thing. */
-  function gateBlocked(){
-    gateNote(!window.turnstile && !turnstileReady()
-      ? "// Your ad blocker just bounced my bouncer. Allow challenges.cloudflare.com and reload — I'd drop the check entirely, but then the spam bots drink all my coffee."
-      : "// Cloudflare refused the badge for this sitekey on " + location.hostname + ". That's my end, kid, not your browser.");
-  }
-
   function setBusy(state){
     busy = state;
     send.disabled = state;
@@ -312,7 +310,7 @@
       /* Tokens are single-use. Drop it and let Turnstile mint a fresh one —
          the callback refills `token` before the next question lands. */
       token = "";
-      if (widgetId != null && turnstileReady()) window.turnstile.reset(widgetId);
+      resetWidget();
       setBusy(false);
       q.focus();
     }
@@ -327,12 +325,6 @@
       return;
     }
 
-    if (!turnstileReady()){
-      gateBlocked();
-      print("// Can't let you in without the bot-check, kid. See the note above.", "err");
-      return;
-    }
-
     if (!token){
       /* Challenge still in flight. Queue the question and fire it the moment
          the token lands, rather than dead-ending and making them retype. */
@@ -344,12 +336,10 @@
       waitTimer = setTimeout(() => {
         if (!pending) return;
         pending = null;
-        if (!turnstileReady() || widgetId == null){
-          gateBlocked();
-          print("// Can't let you in without the bot-check, kid. See the note above.", "err");
-        } else {
-          print("// The bouncer's still squinting at your ID. If there's a checkbox above, tick it; otherwise reload, kid.", "err");
-        }
+        const slot = document.getElementById("turnstile");
+        print(slot && slot.querySelector("iframe")
+          ? "// The bouncer's still squinting at your ID. If there's a checkbox above, tick it; otherwise reload, kid."
+          : "// Bot-check never came up. See the note above, kid.", "err");
       }, 15000);
       return;
     }
@@ -362,75 +352,47 @@
     if (e.key === "Enter"){ e.preventDefault(); ask(); }
   });
 
-  /* Render is idempotent-guarded and callable from two places: Turnstile's
-     onload, and the watchdog. If the onload callback never fires — which is
-     what a null widgetId with a loaded script means — the watchdog still
-     gets the widget up instead of leaving a dead box. */
-  /* window.turnstile appears BEFORE its methods are attached, so testing the
-     object is a race — on a fast connection you catch the half-built stub and
-     render is not a function yet. Test the method itself. */
-  function turnstileReady(){
-    return !!(window.turnstile && typeof window.turnstile.render === "function");
-  }
+  /* Turnstile renders itself from the data-* attributes on #turnstile, and
+     calls these globals. Nothing here depends on api.js firing an onload hook
+     or on window.turnstile existing at any particular moment — which is what
+     kept breaking when a second copy of api.js aborted on load. */
+  window.onTurnstileSuccess = function(t){
+    token = t;
+    clearTimeout(waitTimer);
+    if (pending && !busy){ const p = pending; pending = null; deliver(p); }
+  };
 
-  function renderWidget(){
-    if (widgetId != null || !turnstileReady()) return;
+  window.onTurnstileError = function(code){
+    token = ""; pending = null; setBusy(false);
+    console.error("turnstile error:", code);
+    gateNote("// Cloudflare turned the bouncer away (code " + code + "). That's my end, kid, not your browser.");
+    print("// Bot-check won't run. See the note above, kid.", "err");
+    return true;
+  };
+
+  window.onTurnstileExpired = function(){ token = ""; resetWidget(); };
+
+  /* One widget on the page, addressed by its container. */
+  function resetWidget(){
     try {
-      widgetId = window.turnstile.render("#turnstile", {
-        sitekey: TURNSTILE_SITE_KEY,
-        theme: "dark",
-        callback: (t) => {
-          token = t;
-          clearTimeout(waitTimer);
-          if (pending && !busy){ const p = pending; pending = null; deliver(p); }
-        },
-        /* Cloudflare's own code — the one thing that names the real fault. */
-        "error-callback": (code) => {
-          token = ""; pending = null; setBusy(false);
-          console.error("turnstile error-callback:", code);
-          gateNote("// Cloudflare turned the bouncer away (code " + code + "). That's my end, kid, not your browser.");
-          print("// Bot-check won't run. See the note above, kid.", "err");
-          return true;
-        },
-        "expired-callback": () => {
-          token = "";
-          if (widgetId != null && turnstileReady()) window.turnstile.reset(widgetId);
-        },
-      });
-      /* render() returns null/undefined when Cloudflare rejects the sitekey,
-         without throwing and without firing error-callback. Log it so the
-         cause is visible instead of inferred. */
-      console.log("turnstile.render returned:", widgetId, "sitekey:", TURNSTILE_SITE_KEY);
-      if (widgetId == null){
-        console.error("turnstile.render refused the sitekey — check it matches the widget in the Cloudflare dashboard, and that this hostname is on that widget's allow-list:", location.hostname);
+      if (window.turnstile && typeof window.turnstile.reset === "function"){
+        window.turnstile.reset("#turnstile");
       }
-    } catch (err) {
-      console.error("turnstile render threw:", err);
-      gateNote("// Cloudflare wouldn't take the sitekey — " + err.message + ". My end, kid.");
-    }
+    } catch (err) { console.error("turnstile reset failed:", err); }
   }
 
-  /* Do NOT depend on api.js's ?onload= callback. If anything loads Turnstile
-     twice — an extension injecting its own copy is common — the second copy
-     aborts with "Turnstile already has been loaded" and the callback never
-     fires, leaving a dead widget. Polling for readiness cannot be starved
-     that way: whoever wins the race, we render off the object that exists. */
-  let waited = 0;
-  const readyPoll = setInterval(() => {
-    if (turnstileReady()){
-      clearInterval(readyPoll);
-      renderWidget();
-      if (widgetId == null) gateBlocked();    /* loaded but refused => sitekey/hostname */
-      return;
-    }
-    waited += 150;
-    if (waited >= 10000){
-      clearInterval(readyPoll);
-      gateBlocked();                          /* never arrived => blocked */
-    }
-  }, 150);
+  /* An actual rendered widget puts an iframe in the slot. That, not a guess
+     about script state, is how we tell "up" from "never arrived". */
+  setTimeout(() => {
+    const slot = document.getElementById("turnstile");
+    if (token || (slot && slot.querySelector("iframe"))) return;
+    console.error("turnstile did not render; window.turnstile:", typeof window.turnstile, "host:", location.hostname);
+    gateNote(!window.turnstile
+      ? "// Your ad blocker just bounced my bouncer. Allow challenges.cloudflare.com and reload — I'd drop the check entirely, but then the spam bots drink all my coffee."
+      : "// Cloudflare refused the badge for this sitekey on " + location.hostname + ". That's my end, kid, not your browser.");
+  }, 10000);
 
 </script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </body>
 </html>
