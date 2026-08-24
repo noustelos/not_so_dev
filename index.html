@@ -87,14 +87,16 @@
   }
 
   /* ---- terminal --------------------------------------------------- */
+  /* Deliberately NOT faded in. Turnstile scans for its container ~400ms after
+     load and refuses to build inside an invisible one, so an opacity:0 reveal
+     here silently kills the bot for everyone except prefers-reduced-motion
+     users, who were exempted from the fade and therefore worked fine. */
   .terminal{
     width:100%;
     text-align:left;
     display:flex;
     flex-direction:column;
     gap:0.9rem;
-    opacity:0;
-    animation:rise 900ms 1700ms ease-out forwards;
   }
 
   .ask{
@@ -127,6 +129,15 @@
     padding:0.15rem 0;
   }
   #q::placeholder{ color:var(--mute); }
+
+  /* An empty flex child collapses to zero width and Turnstile will not render
+     into it. Reserve the widget's actual size up front. */
+  #turnstile{
+    flex:0 0 auto;
+    min-width:300px;
+    min-height:65px;
+  }
+  @media (max-width:22rem){ #turnstile{ min-width:100%; } }
 
   .controls{
     display:flex;
@@ -194,7 +205,7 @@
   @keyframes blink{ 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
 
   @media (prefers-reduced-motion: reduce){
-    .stage,.meta,.tagline,.terminal{ opacity:1; animation:none; transform:none; }
+    .stage,.meta,.tagline{ opacity:1; animation:none; transform:none; }
     .not{ opacity:0.9; animation:none; filter:none;
           text-shadow:0 0 18px rgba(217,119,87,0.28); }
     .meta .cursor{ animation:none; }
