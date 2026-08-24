@@ -74,6 +74,10 @@ function rateLimited(ip) {
   return bucket.length > RATE_LIMIT_MAX;
 }
 
+/* Returns { ok, codes }. Cloudflare names the exact fault in error-codes —
+   invalid-input-secret (secret does not match the sitekey's widget),
+   invalid-input-response (bad token), timeout-or-duplicate (token reused).
+   Discarding it turns three different problems into one opaque 403. */
 async function turnstilePasses(token, ip, secret) {
   const form = new FormData();
   form.append("secret", secret);
@@ -85,9 +89,9 @@ async function turnstilePasses(token, ip, secret) {
     body: form,
     signal: AbortSignal.timeout(TURNSTILE_TIMEOUT_MS),
   });
-  if (!res.ok) return false;
+  if (!res.ok) return { ok: false, codes: ["siteverify-http-" + res.status] };
   const data = await res.json();
-  return data.success === true;
+  return { ok: data.success === true, codes: data["error-codes"] || [] };
 }
 
 export async function onRequestPost(context) {
@@ -131,13 +135,19 @@ export async function onRequestPost(context) {
 
   if (!turnstileToken) return json({ error: VOICE.turnstile }, 403);
 
-  let verified = false;
+  let verdict = { ok: false, codes: ["verify-threw"] };
   try {
-    verified = await turnstilePasses(turnstileToken, ip, env.TURNSTILE_SECRET_KEY);
-  } catch {
-    verified = false;
+    verdict = await turnstilePasses(turnstileToken, ip, env.TURNSTILE_SECRET_KEY);
+  } catch (err) {
+    verdict = { ok: false, codes: ["verify-threw-" + (err?.name || "error")] };
   }
-  if (!verified) return json({ error: VOICE.turnstile }, 403);
+  if (!verdict.ok) {
+    console.error("ask: turnstile rejected:", verdict.codes.join(","));
+    /* Codes are diagnostic, not secret — they name a server misconfiguration,
+       never anything about the user. Kept in the response while the deploy is
+       being verified. */
+    return json({ error: VOICE.turnstile, code: verdict.codes.join(",") }, 403);
+  }
 
   /* Throttle only after Turnstile, so a failed challenge can't burn a slot. */
   if (rateLimited(ip)) return json({ error: VOICE.rateLimit }, 429);
