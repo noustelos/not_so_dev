@@ -241,7 +241,13 @@
       </div>
 
       <div class="controls">
-        <div id="turnstile"></div>
+        <div id="turnstile" class="cf-turnstile"
+             data-sitekey="0x4AAAAAAEZqcunYx3BQf4uN"
+             data-theme="dark"
+             data-callback="onSuccess"
+             data-error-callback="onError"
+             data-expired-callback="onExpired"></div>
+        <div id="gatemsg" class="gatemsg"></div>
         <button id="send" type="button">ask &crarr;</button>
       </div>
 
@@ -264,8 +270,6 @@
   let pending  = null;  /* question asked before the challenge resolved */
   let busy     = false;
   let waitTimer = null;
-  let widgetId  = null;
-  let initTries = 0;
 
   function print(text, cls){
     out.textContent = "";
@@ -285,15 +289,15 @@
   /* Ad blockers routinely block challenges.cloudflare.com — and this audience
      runs them. Say so where the widget should have been, in Uncle Dev's voice:
      the gag points at the blocker, never at the person. */
+  /* Writes to its OWN element. The previous version emptied #turnstile, which
+     destroyed a working widget every time the detection was wrong — and the
+     detection was wrong repeatedly. A diagnostic must never break the thing
+     it is diagnosing. */
   function gateNote(msg){
-    const slot = document.getElementById("turnstile");
-    if (!slot || slot.dataset.noted) return;
-    slot.dataset.noted = "1";
-    slot.textContent = "";
-    const note = document.createElement("div");
-    note.className = "gatemsg";
-    note.textContent = msg;
-    slot.appendChild(note);
+    const el = document.getElementById("gatemsg");
+    if (!el || el.dataset.noted) return;
+    el.dataset.noted = "1";
+    el.textContent = msg;
   }
 
   /* Two very different faults that used to look identical. Blocked = the
@@ -371,81 +375,52 @@
     if (e.key === "Enter"){ e.preventDefault(); ask(); }
   });
 
-  /* One render, from Turnstile's own onload hook, guarded by widgetId so it
-     can never run twice. No ready() — Cloudflare forbids it alongside
-     async/defer and throws. No implicit attributes on the container, so there
-     is exactly one widget and one challenge iframe. */
-  function onSuccess(t){
+  /* Implicit rendering, identical to the diagnostic page that renders and
+     solves reliably on these browsers. Turnstile builds the widget from the
+     data-* attributes and calls these globals — no render(), no ready(), no
+     onload, so none of the initialisation states that broke this can occur. */
+  window.onSuccess = function(t){
     token = t;
     clearTimeout(waitTimer);
+    console.log("turnstile: token received");
     if (pending && !busy){ const p = pending; pending = null; deliver(p); }
-  }
+  };
 
-  function onError(code){
+  window.onError = function(code){
     token = ""; pending = null; setBusy(false);
     console.error("turnstile error:", code);
     gateNote("// Cloudflare turned the bouncer away (code " + code + "). That's my end, kid, not your browser.");
-    print("// Bot-check won't run. See the note above, kid.", "err");
     return true;
-  }
+  };
 
-  function onExpired(){ token = ""; resetWidget(); }
+  window.onExpired = function(){ token = ""; resetWidget(); };
 
   /* Tokens are single-use: without this the second question 403s. */
   function resetWidget(){
     token = "";
     try {
-      if (widgetId !== null && window.turnstile) window.turnstile.reset(widgetId);
+      if (window.turnstile && typeof window.turnstile.reset === "function"){
+        window.turnstile.reset("#turnstile");
+      }
     } catch (err) { console.error("turnstile reset failed:", err); }
   }
 
-  /* onload fires while window.turnstile is still half-built — that is exactly
-     what "render is not a function" meant. ready() is Cloudflare's documented
-     wait for full initialisation, and it requires the script tag to carry
-     NEITHER async NOR defer. The poll is a backstop in case ready() never
-     fires; it checks for the METHOD, never merely the object. */
-  function initTurnstile(){
-    if (widgetId !== null) return;
-
-    if (!window.turnstile || typeof window.turnstile.render !== "function"){
-      if (initTries++ < 40){ setTimeout(initTurnstile, 150); return; }
-      console.error("turnstile: render never became available");
-      gateNote("// The bouncer never clocked in. Reload and I'll try again, kid.");
-      return;
-    }
-
-    try {
-      widgetId = window.turnstile.render("#turnstile", {
-        sitekey: TURNSTILE_SITE_KEY,
-        theme: "dark",
-        callback: onSuccess,
-        "error-callback": onError,
-        "expired-callback": onExpired,
-      });
-      console.log("turnstile render ->", widgetId);
-      if (widgetId == null){
-        gateNote("// Cloudflare refused the badge for this sitekey on " + location.hostname + ". That's my end, kid, not your browser.");
-      }
-    } catch (err) {
-      console.error("turnstile render threw:", err);
-      gateNote("// Cloudflare wouldn't take the sitekey — " + err.message + ". My end, kid.");
-    }
+  function widgetUp(){
+    const slot = document.getElementById("turnstile");
+    return !!(slot && slot.childElementCount > 0);
   }
-  window.initTurnstile = initTurnstile;
 
-  function widgetUp(){ return widgetId !== null; }
 
   /* TEMPORARY probes — remove once the widget is confirmed working. */
   window.addEventListener("error", (e) => {
     console.error("PROBE uncaught:", e.message, "@", e.filename + ":" + e.lineno);
   });
   console.log("PROBE script end; callbacks defined:",
-    typeof window.initTurnstile, "| widgetId:", widgetId);
+    typeof window.onSuccess, "| impl:", "implicit");
   [500, 1500, 3000, 6000, 9000].forEach((ms) => setTimeout(() => {
     const slot = document.getElementById("turnstile");
     console.log("PROBE t=" + ms,
       "turnstile:", typeof window.turnstile,
-      "widgetId:", widgetId,
       "children:", slot ? slot.childElementCount : "NO SLOT",
       "class:", slot ? slot.className : "-",
       "noted:", slot ? !!slot.dataset.noted : "-",
@@ -464,21 +439,6 @@
   }, 10000);
 
 </script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
-<script>
-  /* Cloudflare's documented pattern: ready() AFTER a non-async, non-deferred
-     api.js. The fallback timer covers ready() never firing at all. */
-  try {
-    if (window.turnstile && typeof window.turnstile.ready === "function"){
-      window.turnstile.ready(window.initTurnstile);
-    } else {
-      window.initTurnstile();
-    }
-  } catch (err) {
-    console.error("turnstile ready() threw:", err);
-    window.initTurnstile();
-  }
-  setTimeout(window.initTurnstile, 2500);
-</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </body>
 </html>
