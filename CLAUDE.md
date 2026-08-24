@@ -36,6 +36,28 @@ The core product. The askXXX model with a soul: **no app, no sign-up, just ask.*
 - Abuse/cost control on the no-sign-up box: **Turnstile** (bot filter) **+ per-IP rate limiting**. Both, always. "Just ask" is open UX and an open cost door at the same time.
 - Stateless: each answer stands alone, no memory. Cheaper and fits no-sign-up.
 
+**Greek is a best-effort second surface, and that is a settled decision
+(2026-08-24).** It exists because Nick is Greek and because a European project
+on a European model should answer in the owner's language — not because Greek
+speakers are the target audience. They are not. **English is the audience.**
+
+Consequence: Greek replies from `mistral-small-latest` carry occasional
+grammar slips — wrong case or pronoun, e.g. "**Σε** στέλνει στον πάροχο"
+(sends *you*) where it meant "**Τον** στέλνει" (sends *the code*). **This is
+accepted.** Nick reviewed exactly such an answer and called it good enough.
+
+Do NOT, in a future pass:
+- move to a larger model to fix Greek grammar — it multiplies per-question cost
+  against the EUR 15 cap for a non-target audience;
+- add "write correct Greek" instructions to the prompt — small models do not
+  reliably obey them, and the prompt is already at three format passes;
+- keep re-rolling answers hunting for a cleaner metaphor. `temperature` is 0.7,
+  so every reply differs; judging the prompt off a single sample is chasing
+  variance, not quality.
+
+Perfect Greek is explicitly **not** a goal. The bar is "understandable and in
+voice", and it is met.
+
 ## Funnels (notso -> unacceptable)
 Panic gags redirect to the confession box **in Uncle Dev's warm voice** — the uncle walks you there, the system doesn't mock you.
 - **Cmd+Z / Ctrl+Z ambient listener** is the ONE funnel to ship first: it catches the reflex, the user doesn't opt in. ~30 lines of JS.
@@ -85,9 +107,11 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
       Preview is still empty, see Gotchas. Verified end to end in-browser on
       2026-08-24: widget solves, answer returns in voice with the `//`
       punchline, follow-up questions work (token reset confirmed). Greek in →
-      Greek out, with a Greek `//` punchline. **Known gap:** the Greek reply
-      does not use "ανιψιέ" as the spec requires — the English reply does use
-      "kid". Prompt-only fix if it matters; behaviour is otherwise on-spec.
+      Greek out, with a Greek `//` punchline. **Voice signed off 2026-08-24**
+      after three prompt passes (one metaphor / decompressing punchline /
+      optional "ανιψιέ") and the `MAX_TOKENS` fix. Nick accepted the resulting
+      Greek answer as good enough — see "Greek is a best-effort second
+      surface" above before touching the prompt for Greek again.
       Turnstile secret rotated 2026-08-24 (deployment 44c2b8e8) after the old
       one was exposed in chat. **Rotation VERIFIED 2026-08-24**, past the ~2h
       grace window, by a live Greek question that returned a normal answer. No
