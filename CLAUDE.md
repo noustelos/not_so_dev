@@ -89,13 +89,13 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
       does not use "ανιψιέ" as the spec requires — the English reply does use
       "kid". Prompt-only fix if it matters; behaviour is otherwise on-spec.
       Turnstile secret rotated 2026-08-24 (deployment 44c2b8e8) after the old
-      one was exposed in chat. **Verification still pending:** Cloudflare keeps
-      the previous secret valid for ~2h after rotation, so any test inside that
-      window passes on the OLD key and proves nothing. Re-test after the grace
-      window — if `/api/ask` starts answering "the bouncer didn't recognise
-      you" for everyone, the new secret never saved and the old one just
-      expired. Pages secrets are write-only, so the stored value cannot be read
-      back to check; the delayed test is the only proof.
+      one was exposed in chat. **Rotation VERIFIED 2026-08-24**, past the ~2h
+      grace window, by a live Greek question that returned a normal answer. No
+      separate test was needed: the handler never calls Mistral before
+      siteverify passes, so any answer at all is proof the stored secret works.
+      Pages secrets are write-only and cannot be read back — a real answer
+      after the grace window is the only available proof, and that is now on
+      the record.
 - [ ] Cmd+Z ambient funnel -> unacceptable.dev.
 - [ ] Feed (static, git-based).
 
@@ -219,11 +219,17 @@ production.
   caps an abuse scenario without throttling real use. If the bot ever goes
   quiet with no Turnstile error, check whether the cap was reached before
   debugging anything else.
-- **Verify the secret rotation** once the ~2h grace window has passed (see the
-  status entry). Symptom of failure: every question answers "the bouncer didn't
-  recognise you".
-- **Decide on "ανιψιέ."** Greek replies omit it. Prompt-only fix; left undone
-  deliberately because forcing a vocative can make Greek read stiff.
+- ~~Verify the secret rotation~~ — **DONE 2026-08-24**, see the status entry.
+- ~~Decide on "ανιψιέ."~~ — **DONE 2026-08-24: it is now explicitly OPTIONAL**
+  in `uncle-dev.system.md`, and the bot omitting it entirely is an accepted
+  outcome, not a defect. Nick's original instinct held: a forced vocative makes
+  Greek read stiff, and stiff is the opposite of the voice. Do not "fix" future
+  Greek replies that lack it. The same pass also tightened two real voice
+  drifts caught in a live answer — **exactly one** metaphor (it had stacked a
+  sticker-on-a-box on top of a folder-in-an-office), and the `//` line must
+  speak *to the person* rather than recap the answer (it had restated its own
+  metaphor). Plus: stay general when unsure of a flag's exact behaviour —
+  vague-and-true over specific-and-wrong.
 
 **Then, each independent and none requiring the bot to change:**
 
