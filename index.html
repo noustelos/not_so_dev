@@ -336,8 +336,7 @@
       waitTimer = setTimeout(() => {
         if (!pending) return;
         pending = null;
-        const slot = document.getElementById("turnstile");
-        print(slot && slot.querySelector("iframe")
+        print(widgetUp()
           ? "// The bouncer's still squinting at your ID. If there's a checkbox above, tick it; otherwise reload, kid."
           : "// Bot-check never came up. See the note above, kid.", "err");
       }, 15000);
@@ -381,11 +380,44 @@
     } catch (err) { console.error("turnstile reset failed:", err); }
   }
 
+  function widgetUp(){
+    const slot = document.getElementById("turnstile");
+    return !!(slot && slot.querySelector("iframe"));
+  }
+
+  /* If the api.js copy that won the race was loaded in explicit mode, it never
+     scans for .cf-turnstile and nothing renders on its own — which is exactly
+     what the console showed: turnstile present, no widget. ready() queues the
+     callback until the API is genuinely usable, which is the guarantee a
+     typeof check cannot give. Sitekey is read back off the element so it
+     still lives in exactly one place. */
+  function renderFallback(){
+    if (widgetUp() || !window.turnstile) return;
+    if (typeof window.turnstile.ready !== "function") return;
+    window.turnstile.ready(() => {
+      const slot = document.getElementById("turnstile");
+      if (!slot || widgetUp()) return;
+      slot.classList.remove("cf-turnstile");   /* so implicit can't double up */
+      try {
+        const id = window.turnstile.render("#turnstile", {
+          sitekey: slot.dataset.sitekey,
+          theme: "dark",
+          callback: window.onTurnstileSuccess,
+          "error-callback": window.onTurnstileError,
+          "expired-callback": window.onTurnstileExpired,
+        });
+        console.log("turnstile fallback render returned:", id);
+      } catch (err) {
+        console.error("turnstile fallback render threw:", err);
+      }
+    });
+  }
+  setTimeout(renderFallback, 3000);
+
   /* An actual rendered widget puts an iframe in the slot. That, not a guess
      about script state, is how we tell "up" from "never arrived". */
   setTimeout(() => {
-    const slot = document.getElementById("turnstile");
-    if (token || (slot && slot.querySelector("iframe"))) return;
+    if (token || widgetUp()) return;
     console.error("turnstile did not render; window.turnstile:", typeof window.turnstile, "host:", location.hostname);
     gateNote(!window.turnstile
       ? "// Your ad blocker just bounced my bouncer. Allow challenges.cloudflare.com and reload — I'd drop the check entirely, but then the spam bots drink all my coffee."
