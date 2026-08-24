@@ -68,7 +68,7 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
 - [x] Placeholder landing (`index.html`): breathing `not` hero.
 - [x] `uncle-dev.system.md` — Uncle Dev persona / behaviour spec.
 - [ ] Terminal-nav (`DIR /ABOUT` -> SYSTEM_SPECS.LOG etc.) + punchline bank. Static, buildable now.
-- [x] Uncle Dev bot — **LIVE** (`8c8014a`, `main`). Pages Function at
+- [x] Uncle Dev bot — **LIVE** on `main` (bot code settled at `4d63ecd`). Pages Function at
       `functions/api/ask.js`, not a standalone Worker: same origin, same git push,
       secrets in the Pages project. Mistral (`mistral-small-latest`) behind
       server-side Turnstile — the model is never called before the challenge
@@ -126,6 +126,43 @@ from the div being mistaken for the API. The container on notso.dev is
 The lesson generalises: when a page fails and a near-identical test page works,
 **diff the two pages first**. The answer was one attribute the whole time.
 
+**Load Turnstile with `defer`, never `async`.** With `async defer`, `async`
+wins and `api.js` executes the moment it downloads — mid-parse. On a page with
+a large inline `<style>` block the container is not parsed yet, so Turnstile
+scans for `.cf-turnstile`, finds nothing, and never scans again. Symptom: the
+container has the right class and width but zero children, forever.
+
+**Turnstile renders into a shadow root.** `container.querySelector("iframe")`
+never finds the widget and will report a working one as broken. Test
+`container.childElementCount > 0` instead.
+
+**A diagnostic must never mutate what it measures.** The on-page error helper
+originally wrote its message by emptying the widget container. Every wrong
+guess therefore *deleted a working widget* and replaced it with an error,
+manufacturing the symptom being chased and corrupting several rounds of
+evidence. It writes to its own `#gatemsg` element now. Keep it that way.
+
+**Reading siteverify — the codes name the fault precisely:**
+
+| response | meaning |
+|---|---|
+| `200` + `success:true` | all good |
+| `200` + `invalid-input-response` | **secret is CORRECT**, the token is bad/expired/reused |
+| `400` + `invalid-input-secret` | the stored SECRET is wrong (e.g. a sitekey pasted into it) |
+| `400` + `missing-input-secret` | the secret is empty or whitespace |
+
+A bad token never yields a 400. Parse the body even when `res.ok` is false —
+Cloudflare returns 400 *with* a useful `error-codes` array, and bailing on
+status alone hides the real cause. To verify a secret without exposing it:
+
+    read -s "S?secret: "; echo; curl -s -X POST \
+      https://challenges.cloudflare.com/turnstile/v0/siteverify \
+      -F "secret=$S" -F "response=dummy"; unset S
+
+`functions/api/ask.js` logs these codes but deliberately does not return them.
+If a Turnstile failure ever needs diagnosing from the browser again, add
+`code: verdict.codes.join(",")` to the 403 JSON for one deploy, then remove it.
+
 **Local dev.** `.dev.vars` is gitignored and untracked — it holds the Turnstile
 *test* keys (sitekey `1x00000000000000000000AA` 24 chars / secret
 `1x0000000000000000000000000000000AA` 35 chars, both always-pass). Those two
@@ -142,7 +179,18 @@ production.
 
 ## Next session
 
-Each item is independent and none requires touching the bot.
+**Open actions first — carried over, both small:**
+
+- **Mistral spend cap.** Still not set. The endpoint is live and billable, and
+  this is the only control that bounds the worst case; the Turnstile gate and
+  the per-IP throttle are both probabilistic. Do this before adding traffic.
+- **Verify the secret rotation** once the ~2h grace window has passed (see the
+  status entry). Symptom of failure: every question answers "the bouncer didn't
+  recognise you".
+- **Decide on "ανιψιέ."** Greek replies omit it. Prompt-only fix; left undone
+  deliberately because forcing a vocative can make Greek read stiff.
+
+**Then, each independent and none requiring the bot to change:**
 
 1. **Terminal-nav** — `DIR /ABOUT` -> `SYSTEM_SPECS.LOG` etc. + punchline bank.
    Static, buildable immediately, no blockers.
