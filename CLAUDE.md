@@ -80,9 +80,14 @@ Review output as: **Urgent Fixes / Quality / Nice-to-have / Monetization.**
       Greek out, with a Greek `//` punchline. **Known gap:** the Greek reply
       does not use "ανιψιέ" as the spec requires — the English reply does use
       "kid". Prompt-only fix if it matters; behaviour is otherwise on-spec.
-      **Pending:** the Turnstile secret was pasted into chat during debugging
-      and should be rotated — rotate, update the same Pages field, redeploy.
-      The sitekey does not change.
+      Turnstile secret rotated 2026-08-24 (deployment 44c2b8e8) after the old
+      one was exposed in chat. **Verification still pending:** Cloudflare keeps
+      the previous secret valid for ~2h after rotation, so any test inside that
+      window passes on the OLD key and proves nothing. Re-test after the grace
+      window — if `/api/ask` starts answering "the bouncer didn't recognise
+      you" for everyone, the new secret never saved and the old one just
+      expired. Pages secrets are write-only, so the stored value cannot be read
+      back to check; the delayed test is the only proof.
 - [ ] Cmd+Z ambient funnel -> unacceptable.dev.
 - [ ] Feed (static, git-based).
 
