@@ -312,6 +312,36 @@ one-page site for nothing in return. Contrast the `NOUSTELOS_STUDIO` credit,
 which IS linked precisely because the outbound traffic is the point of it. The
 logo is skipped to avoid pulling in brand guidelines over a footer line.
 
+**Cloudflare security hardening, applied 2026-08-25** (by a Chrome extension
+driving the dashboard, not by anything in this repo — so it is invisible in git
+and will surprise you later): Always Use HTTPS, SSL/TLS **Full (strict)**, min
+TLS **1.2**, HSTS 180 days (no subdomains, no preload), nosniff, Certificate
+Transparency alerts, **Bot Fight Mode**, Browser Integrity Check. Untouched:
+Advanced Certificate Manager, Under Attack mode, and AI/Search bot policies
+(all still **Allow**).
+
+**Verified after the change**, both paths: a raw `curl` POST to `/api/ask`
+returns *our* JSON 403, not a Cloudflare challenge page — so the request still
+reaches the Pages Function despite Bot Fight Mode, and a bare curl is the
+profile most likely to be challenged. A real browser question then returned a
+full in-voice answer. Turnstile -> token -> Mistral is intact.
+
+**Bot Fight Mode is now a suspect whenever `/api/ask` misbehaves**, and it
+cannot be scoped per-path on the free plan. It is fine for browser traffic
+today; the exposure is future non-browser callers — an uptime monitor, a
+webhook, a CI smoke test — which it may challenge. Check it before debugging
+the handler.
+
+**HSTS is the one change that is NOT reversible.** Turning it off in the
+dashboard only stops *sending* the header; every browser that already received
+it enforces HTTPS for up to 180 days regardless. Harmless here (the site is
+HTTPS-only anyway), but the change log that shipped with this work described
+everything as one-click reversible, and that part was wrong.
+
+For the open Search Console task: Cloudflare does not challenge verified
+crawlers, and the bot policies were left on Allow, so indexing is not blocked
+by any of the above — confirm inside Search Console once it is set up.
+
 **Local dev.** `.dev.vars` is gitignored and untracked — it holds the Turnstile
 *test* keys (sitekey `1x00000000000000000000AA` 24 chars / secret
 `1x0000000000000000000000000000000AA` 35 chars, both always-pass). Those two
