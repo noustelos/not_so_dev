@@ -19,3 +19,6 @@
 .dev.vars.*
 .wrangler/
 node_modules/
+
+# private, local-only lessons file — NEVER commit
+LESSONS.md
