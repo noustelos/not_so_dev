@@ -226,8 +226,9 @@
   .out .err{ color:var(--phosphor); }
 
   /* ---- footer ----------------------------------------------------- */
-  /* Three ranks, quietest last: the joke, then contact, then the credit.
-     The fade lives on the <footer>, so the two rows arrive together. */
+  /* Ranked quietest last: contact and the joke, then the data line, then the
+     vendor and the studio credit. The fade lives on the <footer>, so every
+     row arrives together. */
   .site-foot{
     grid-row:2;
     width:100%;
@@ -292,11 +293,25 @@
   .by:hover .by__name,
   .by:focus-visible .by__name{ color:var(--bone); }
 
+  /* The only line on the page that touches data, so it stays a joke and never
+     a promise: it says what we WANT, not where anything is processed. See
+     "Vendor attribution" in CLAUDE.md before widening it into a guarantee —
+     the question does travel to Mistral and the IP to Turnstile. Sits directly
+     above the vendor credit because that is where the subject belongs. */
+  .privacy{
+    font-size:clamp(0.64rem, 1.6vw, 0.72rem);
+    letter-spacing:0.02em;
+    line-height:1.4;
+    color:var(--rule);
+    max-width:30rem;
+    text-wrap:balance;
+  }
+
   /* Vendor attribution, not a partnership and not a privacy claim: it names
      where the model comes from, never where the data goes. No link — Mistral
      is a supplier, and a hyperlink would read as an endorsement while sending
      traffic off a one-page site. No logo either; that pulls in brand
-     guidelines for nothing. Sits between the tagline and the studio credit,
+     guidelines for nothing. Sits between the privacy line and the studio credit,
      dimmer than one and warmer than the other. */
   .engine{
     font-size:clamp(0.6rem, 1.5vw, 0.68rem);
@@ -482,10 +497,11 @@
           <span class="file__desc">what this place is</span>
         </summary>
         <div class="file__body">
-          <p>Two domains, one fun project. <strong>unacceptable.dev</strong> takes the
-             confession, <strong>notso.dev</strong> hands you an uncle. What sits
-             between them is a hyperlink and a person reading submissions &mdash;
-             no platform, no pipeline, no synergy.</p>
+          <p>Three domains, one fun project. <strong>notso.dev</strong> explains the
+             command you pasted, <strong>trustno.dev</strong> points you at a real
+             tool that checks it, <strong>unacceptable.dev</strong> keeps the log of
+             everything that went wrong first. What sits between them is a hyperlink
+             and one person reading &mdash; no platform, no pipeline, no synergy.</p>
           <p class="pun">// No roadmap, no Series A. A guy and a terminal.</p>
         </div>
       </details>
@@ -529,6 +545,8 @@
       <!--email_off--><a class="mailto" href="mailto:oops@notso.dev">oops@notso.dev</a><!--/email_off-->
       <span class="tagline">life is vibecoding, every day.</span>
     </div>
+
+    <p class="privacy">// we don't want your data &mdash; we wouldn't trust ourselves with it anyway.</p>
 
     <p class="engine">ANSWERS BY <span class="engine__name">MISTRAL_AI</span><span class="by__mark" aria-hidden="true">/&gt;</span> EU</p>
 

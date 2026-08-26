@@ -26,6 +26,31 @@ Confession box (unacceptable.dev) has **two CTAs**:
 - **Send to void** — zero record anywhere. Catharsis is the product; no retention needed.
 - **Send to blog** — becomes a feed entry on notso.dev. Asks for a handle (Discord / socials / whatever they already use), not an account. Display-only, unverified. **Owner reviews every submission before it publishes.**
 
+### Third domain: `trustno.dev` (2026-08-26 — PROVISIONAL, brief pending)
+
+Nick bought **`trustno.dev`** and it joins the set as a third door. A fuller
+brief is coming; until it lands this is all that is settled, and nothing here
+is built yet:
+
+| Domain | Role | Identity |
+|---|---|---|
+| `notso.dev` | **EXPLAIN** — demystify concepts (Turnstile, CORS, edge proxies, state) without burning the context window of your Claude/Cursor | `oops@notso.dev` |
+| `trustno.dev` | **CHECK** — curated triage toward real dev tools (SecurityHeaders, Cloudflare tools, wasm checkers). Flagship: *"can the AI see me?"* — robots.txt / crawler exposure / AI scraping | `anyone@trustno.dev` |
+| `unacceptable.dev` | **CONFESS** — post-mortem failure log and dev blog; real stories from 27+ repos, plus community on Reddit/X/Discord | `human@unacceptable.dev` |
+
+The three-name joke still holds and is now clearer, not weaker: **every name is
+a negation** — *not*so / trust*no* / *un*acceptable. The spine is the refusal,
+not the original two-way symmetry. A fourth door must negate something too or
+it does not belong.
+
+`SYSTEM_SPECS.LOG` in `index.html` was updated to **"Three domains, one fun
+project"** on 2026-08-26 and lists all three roles in reader order (notso first
+— that is where the reader is standing). **Do not revert it to two.**
+
+Nothing links to `trustno.dev` from this repo yet, and there is no `TRUSTNO`
+row in the terminal-nav: there is no page to land on, and a dead link is worse
+than no mention. Wait for the brief.
+
 Feed content unit: a `NOT SO [X]` tag + the story. Owner assigns/curates the tag at moderation time.
 
 ## notso.dev — the Uncle Dev bot
@@ -328,6 +353,20 @@ EU", "GDPR-safe", "EU-hosted". That is a legally loaded claim, it sits right
 under a box where people type questions, and this site has no terms, no privacy
 policy, and no verified answer on where Mistral processes or how long it
 retains prompts. Attribution is safe; a promise is not.
+
+**The footer data line is a joke, never a promise** (added 2026-08-26):
+`// we don't want your data — we wouldn't trust ourselves with it anyway.`
+It sits directly above the Mistral credit and says what we *want*, never where
+anything is processed. Nick's original draft was a caps banner —
+`NO SIGN-UP. NO EMAILS. NO TRACKING.` plus "raw answers and zero corporate
+fluff" — and it was cut down to the one self-deprecating sentence. Four
+reasons, all still binding: the page already says it twice (the hero `// no
+app, no sign-up, just ask` and `README.TXT`); **"NO EMAILS" sits inches from
+`oops@notso.dev`** and reads as a contradiction; **"NO TRACKING" in caps is
+the same trap as the EU line** — `ask.js` reads `CF-Connecting-IP`, sends it
+to siteverify as `remoteip` and holds it for the throttle, and the question
+itself travels to Mistral; and "zero corporate fluff" is written in exactly
+the landing-page voice it claims to reject. **Do not restore the caps banner.**
 
 **No link and no logo on it, both deliberate.** Mistral is a supplier, not a
 collaborator — a hyperlink reads as endorsement and sends traffic off a
