@@ -155,11 +155,17 @@ other faded blocks.
       of a one-shot `notin` fade to a resting `opacity:0.66`. Do not reintroduce
       a pulse on the hero. The `prefers-reduced-motion` fallback is now pixel-
       identical to the animated end state — only the fade is dropped.
+      The wordmark is **one word**: `notso.dev`, no space between `not` and
+      `so` (2026-08-26). The two-domain joke is carried by the COLOUR — orange
+      `not`, bone `so.dev` — not by a gap. A gap made it read as two separate
+      things instead of one domain. Do not put the space back; if the letters
+      ever look too tight, adjust `letter-spacing` on `.not`.
       Prompt label is `ask_uncle_Dev`. The Turnstile badge sits fixed in the
       bottom-left corner at `opacity:0.5`, full strength on hover/focus — it is
       a control, not content, and under the input the eye kept snagging on it.
       Footer carries `ANSWERS BY MISTRAL_AI/> EU` — see "Vendor attribution"
-      below before editing that line.
+      below before editing that line. The blinking `_` lives on the `.ps1`
+      prompt label — see "The blinking cursor" below.
 - [x] `uncle-dev.system.md` — Uncle Dev persona / behaviour spec.
 - [x] Terminal-nav + punchline bank — **BUILT 2026-08-25**, verified in-browser. See "Terminal-nav" below.
 - [x] Uncle Dev bot — **LIVE** on `main` (bot code settled at `4d63ecd`). Pages Function at
@@ -296,6 +302,23 @@ Mistral's `finish_reason` and, on `"length"`, trims back to the last complete
 sentence — a dangling character reads as a broken site. That trim sacrifices
 the `//` punchline when it fires, so it logs a warning: **if that warning shows
 up regularly, tighten the prompt, do not raise the ceiling again.**
+
+**The blinking cursor belongs to the input line, and only to it.** It used to
+sit at the end of the `// no app, no sign-up, just ask` tagline. Nick reported
+it read as a text field there — a blinking caret is an affordance, and pointing
+it at a line of prose pulls clicks away from the one box that matters. Moved to
+the end of the `guest@notso:~$ ask_uncle_Dev` label on 2026-08-26. Three things
+came with the move and all three are load-bearing:
+
+- it **hides on `:focus-within`** — once the box is focused the browser draws a
+  real caret, and two cursors on one line is worse than none;
+- its animation delay is **1900ms**, after `.terminal`'s 1700ms reveal, so it
+  does not blink inside a still-invisible element;
+- the span is `aria-hidden="true"` so the `_` stays out of the label's
+  accessible name.
+
+Do not add a second decorative cursor anywhere else on the page. One caret,
+on the one real input — that is the whole point of having moved it.
 
 **Vendor attribution names the model's ORIGIN, never the data's path.**
 The footer line is `ANSWERS BY MISTRAL_AI/> EU` (added 2026-08-24, Nick's

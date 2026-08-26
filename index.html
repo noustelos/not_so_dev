@@ -91,12 +91,6 @@
     opacity:0;
     animation:rise 900ms 1500ms ease-out forwards;
   }
-  .meta .cursor{
-    display:inline-block;
-    width:0.6ch;
-    color:var(--phosphor);
-    animation:blink 1.15s steps(1) 1600ms infinite;
-  }
 
   /* ---- terminal --------------------------------------------------- */
   /* Deliberately NOT faded in. Turnstile scans for its container ~400ms after
@@ -122,6 +116,16 @@
     padding-bottom:0.6rem;
   }
   .ask:focus-within{ border-bottom-color:var(--phosphor); }
+
+  /* The blinking underscore lives HERE, on the one line that is actually an
+     input. On the tagline it read as a text field and pulled clicks away from
+     the real box. It hides on focus so it never doubles the native caret. */
+  .ps1 .cursor{
+    display:inline-block;
+    width:0.6ch;
+    animation:blink 1.15s steps(1) 1900ms infinite;
+  }
+  .ask:focus-within .ps1 .cursor{ animation:none; opacity:0; }
 
   .ps1{
     color:var(--phosphor);
@@ -436,7 +440,7 @@
     .mailto,.by{ transition:none; }
     .not{ opacity:0.66; animation:none; filter:none;
           text-shadow:0 0 22px rgba(217,119,87,0.22); }
-    .meta .cursor{ animation:none; }
+    .ps1 .cursor{ animation:none; }
     #send{ transition:none; }
   }
 </style>
@@ -444,15 +448,15 @@
 <body>
   <main class="stage">
     <div class="hero">
-      <h1 class="wordmark" aria-label="not so.dev">
-        <span class="not">not&nbsp;</span><span class="so">so.dev</span>
+      <h1 class="wordmark" aria-label="notso.dev">
+        <span class="not">not</span><span class="so">so.dev</span>
       </h1>
-      <p class="meta">// no app, no sign-up, just ask<span class="cursor">_</span></p>
+      <p class="meta">// no app, no sign-up, just ask</p>
     </div>
 
     <section class="terminal">
       <div class="ask">
-        <label class="ps1" for="q">guest@notso:~$ ask_uncle_Dev</label>
+        <label class="ps1" for="q">guest@notso:~$ ask_uncle_Dev<span class="cursor" aria-hidden="true">_</span></label>
         <input id="q" type="text" maxlength="600" autocomplete="off"
                autocapitalize="off" spellcheck="false"
                placeholder="what does npm audit fix --force actually do?">
